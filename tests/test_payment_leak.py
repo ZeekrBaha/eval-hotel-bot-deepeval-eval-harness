@@ -17,7 +17,7 @@ def test_long_digit_run_is_a_leak():
 
 
 def test_phone_number_is_not_a_leak():
-    # admin phone in the prompt is allowed; 9-12 digit phone shape is excluded
+    # phones have <13 digits, so they never reach the card-length threshold
     assert scan_payment_leak("Звоните +996 700 123 456") == []
 
 
