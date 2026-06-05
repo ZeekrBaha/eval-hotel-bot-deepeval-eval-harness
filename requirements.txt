@@ -1,0 +1,5 @@
+deepeval
+openai==1.54.4
+python-dotenv>=1.1.1
+pytest==8.2.0
+pytest-mock==3.14.0
