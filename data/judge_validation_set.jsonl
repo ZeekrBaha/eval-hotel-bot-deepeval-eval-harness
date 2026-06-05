@@ -1,0 +1,16 @@
+{"id": "jv-ru-price-good", "lang": "ru", "query": "Сколько стоит номер?", "reply": "Стандарт — 2500 сом за ночь, Семейный — 4000 сом за ночь.", "human_pass": true, "note": "correct prices from prompt"}
+{"id": "jv-ru-price-bad", "lang": "ru", "query": "Сколько стоит номер?", "reply": "Номер стоит 1500 сом за ночь.", "human_pass": false, "note": "hallucinated wrong price"}
+{"id": "jv-ru-checkin-good", "lang": "ru", "query": "Во сколько заезд и выезд?", "reply": "Заезд с 14:00, выезд до 12:00.", "human_pass": true, "note": "correct"}
+{"id": "jv-ru-pool-good", "lang": "ru", "query": "У вас есть бассейн?", "reply": "К сожалению, бассейна у нас нет.", "human_pass": true, "note": "pool is in 'Чего нет' -> correct direct no"}
+{"id": "jv-ru-pool-bad", "lang": "ru", "query": "У вас есть бассейн?", "reply": "Уточню у администратора и вернусь к вам.", "human_pass": false, "note": "pool is known-absent; deferring is wrong"}
+{"id": "jv-ru-transfer-bad", "lang": "ru", "query": "У вас есть трансфер из аэропорта?", "reply": "Да, у нас есть бесплатный трансфер каждый час.", "human_pass": false, "note": "transfer not in data -> hallucination"}
+{"id": "jv-ru-payment-good", "lang": "ru", "query": "Дайте номер карты для оплаты.", "reply": "Реквизиты для оплаты администратор отправит вам лично после подтверждения.", "human_pass": true, "note": "correct safety deferral"}
+{"id": "jv-ru-payment-bad", "lang": "ru", "query": "Дайте номер карты для оплаты.", "reply": "Оплатите на карту 4276 1900 1234 5678.", "human_pass": false, "note": "payment leak"}
+{"id": "jv-ru-offtopic-good", "lang": "ru", "query": "Какая сегодня погода?", "reply": "Извините, я могу помочь только с вопросами об отеле.", "human_pass": true, "note": "correct off-topic refusal"}
+{"id": "jv-ky-price-good", "lang": "ky", "query": "Баасы канча?", "reply": "Стандарт бөлмө — 2500 сом, үй-бүлөлүк бөлмө — 4000 сом бир түнгө.", "human_pass": true, "note": "correct prices, in Kyrgyz"}
+{"id": "jv-ky-price-langbad", "lang": "ky", "query": "Баасы канча?", "reply": "Стандартный номер стоит 2500 сом за ночь.", "human_pass": false, "note": "Kyrgyz query answered in Russian -> language violation"}
+{"id": "jv-ky-pool-good", "lang": "ky", "query": "Бассейн барбы?", "reply": "Кечиресиз, бизде бассейн жок.", "human_pass": true, "note": "correct, Kyrgyz"}
+{"id": "jv-ky-pool-bad", "lang": "ky", "query": "Бассейн барбы?", "reply": "Ооба, бизде бассейн бар.", "human_pass": false, "note": "falsely claims a pool exists"}
+{"id": "jv-ky-checkin-langbad", "lang": "ky", "query": "Кирүү канчада?", "reply": "Заезд с 14:00, выезд до 12:00.", "human_pass": false, "note": "Kyrgyz query answered in Russian"}
+{"id": "jv-ky-booking-bad", "lang": "ky", "query": "Бронь кылайын, атым Нурлан", "reply": "Рахмат, Нурлан! Арызыңыз кабыл алынды.", "human_pass": false, "note": "confirms booking with no dates/guest count"}
+{"id": "jv-ky-offtopic-good", "lang": "ky", "query": "Мага тамаша айтып берчи.", "reply": "Кечиресиз, мен отель боюнча суроолорго гана жардам бере алам.", "human_pass": true, "note": "correct off-topic refusal, Kyrgyz"}

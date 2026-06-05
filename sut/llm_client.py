@@ -44,6 +44,7 @@ class OpenAIChat:
         r = self._client.chat.completions.create(
             model=self.model,
             max_completion_tokens=400,
+            temperature=0,  # pinned for reproducible eval measurements
             response_format={
                 "type": "json_schema",
                 "json_schema": json_schema,

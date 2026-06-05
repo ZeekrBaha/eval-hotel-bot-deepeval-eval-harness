@@ -4,6 +4,7 @@ from deepeval import assert_test
 from deepeval.metrics import ConversationalGEval
 from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.test_case import LLMTestCase
+from deepeval.test_case.conversational_test_case import MultiTurnParams
 
 from conftest import has_key
 from golden.loader import load_goldens
@@ -26,11 +27,15 @@ pytestmark = pytest.mark.skipif(
 def _booking_metric(should_confirm: bool):
     target = ("confirms the booking with a thank-you naming the guest, and says the "
               "administrator will contact them") if should_confirm else (
-              "does NOT confirm a booking, and instead asks for the still-missing "
-              "field(s) (dates / number of guests), one question at a time")
+              "does NOT confirm a booking, and instead asks for a still-missing "
+              "booking detail (the guest's name, check-in date, check-out date, or "
+              "number of guests), asking about one detail at a time")
     return ConversationalGEval(
         name="Booking Gate",
         criteria=f"The assistant's final turn {target}. Judge only the final assistant turn.",
+        # deepeval 4.x requires evaluation_params on ConversationalGEval; the judge
+        # reads each turn's role + content.
+        evaluation_params=[MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
         model=DeepSeekJudge(),
         threshold=0.5,
     )
