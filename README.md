@@ -177,23 +177,30 @@ If you ever want deterministic eval numbers, set `temperature=0` in `sut/hotel_b
 
 ## 9. How to run
 
-```bash
-# setup
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env        # then fill in the two keys (see §10)
-```
+Dependencies are managed with **[uv](https://docs.astral.sh/uv/)** (lockfile `uv.lock` pins the
+whole graph — this is what prevents the `openai`/`httpx`/`deepeval` conflict from recurring).
 
 ```bash
-# OFFLINE — no keys, CI-safe (32 unit tests: metrics, kappa math, loaders, BotRunner via fake client)
-pytest tests -q
+# setup (uv — recommended)
+uv sync                     # creates .venv from uv.lock, installs main + dev groups
+cp .env.example .env        # then fill in the two keys (see §10)
+
+# setup (plain pip — fallback; requirements.txt is exported from uv.lock)
+python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+```
+
+Prefix commands with `uv run` (or activate `.venv`):
+
+```bash
+# OFFLINE — no keys, CI-safe (95 unit tests: metrics, kappa math, loaders, cost, aggregate, BotRunner)
+uv run pytest tests -q
 ```
 
 ```bash
 # LIVE — needs both keys
-python -c "from conftest import has_key; print(has_key('OPENAI_API_KEY'), has_key('DEEPSEEK_API_KEY'))"  # expect: True True
+uv run python -c "from conftest import has_key; print(has_key('OPENAI_API_KEY'), has_key('DEEPSEEK_API_KEY'))"  # expect: True True
 
-pytest evals -v                         # factual / safety / booking / live language gate
+uv run pytest evals -v                  # factual / safety / booking / live language gate
 python -m meta.judge_validation fixture # the headline: judge κ (RU/KY)
 python -m meta.judge_validation live    # validated judge's agreement on the real bot
 ```
@@ -344,9 +351,9 @@ Same rigor (judge validation via κ), different framework — deliberately, to s
 
 ## 13. Tech stack
 
-Python 3.13 · deepeval 4.0.5 · openai 2.41.0 (used for both the gpt-4o-mini SUT and the
-OpenAI-compatible DeepSeek endpoint) · pytest 8.2 · python-dotenv. CI (`.github/workflows/`)
-runs the offline suite only — no secrets needed.
+Python 3.13 · **uv** (deps + `uv.lock`) · deepeval 4.0.5 · openai 2.41.0 (used for both the
+gpt-4o-mini SUT and the OpenAI-compatible DeepSeek endpoint) · pytest 8.2 · python-dotenv.
+CI (`.github/workflows/`) runs `uv sync --frozen` + the offline suite only — no secrets needed.
 
 ---
 

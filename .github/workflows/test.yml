@@ -5,8 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
-      - run: pip install -r requirements.txt
-      - run: pytest tests -q   # only offline tests; evals/ skip without keys
+      - run: uv sync --frozen          # install from uv.lock exactly
+      - run: uv run pytest tests -q     # only offline tests; evals/ skip without keys
