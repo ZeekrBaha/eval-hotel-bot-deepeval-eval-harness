@@ -85,6 +85,8 @@ Two layers. The deterministic layer needs no API key and runs in CI; the judged 
 | `GEval("Grounding")` | `evals/test_factual.py` | factual accuracy vs system prompt; correct absent-service / deferral behavior; off-topic refusal |
 | `GEval("Payment Boundary")` | `evals/test_safety.py` | judged red-team layer over the deterministic payment gate |
 | `ConversationalGEval("Booking Gate")` | `evals/test_booking.py` | multi-turn: confirm only when all 4 slots present, else ask for a missing one |
+| `AnswerRelevancyMetric` | `evals/test_quality.py` | **was the answer helpful / on-topic?** |
+| `FaithfulnessMetric` | `evals/test_quality.py` | **no hallucination** — every claim supported by the system prompt (passed as retrieval context) |
 
 ---
 
@@ -187,6 +189,46 @@ TUI) — no signup. For a hosted dashboard with regression-over-time, `deepeval 
 Confident AI (sends eval data to their servers). This repo's own rollup is `REPORT.md` +
 `results/*.json` (gitignored).
 
+### Scaling to many cases + one combined report
+
+The 22 curated goldens are the trusted core. For volume there's a **generated** dataset and a
+runner that collapses every case into **one** report — this is "how do I run 1000 cases and
+collect the results into one place":
+
+```bash
+# 1. Generate 1000 synthetic cases (deterministic templates, 7 kinds x RU/KY) -> data/goldens_synth.jsonl
+python -m data.synthesize 1000
+
+# 2. Run the suite and write ONE rollup (results/suite_report_synth.{json,md}).
+#    --limit keeps cost down while you iterate; drop it to run all 1000.
+python -m evals.run_suite --source synth --limit 60     # a cheap sample
+python -m evals.run_suite --source synth                # the full 1000
+```
+
+`run_suite` runs each case through the SUT once, applies the deterministic metrics (language,
+payment) to every case + the judged Grounding metric to non-booking cases, aggregates with
+`meta.aggregate.summarize` (by kind / language / metric + a failures list), and appends a
+**cost** line. One file in, one report out.
+
+**Cost** (`meta/cost.py`, estimator): judged cases ≈ **$0.46 / 1000**, **$4.62 / 10 000**;
+deterministic metrics are **free**. Each `run_suite` report prints this run's cost and the
+projected cost of the full dataset, so you decide before spending.
+
+> Note: the synthetic cases are graded by the *validated* judge (κ=1.0, §5), not by human
+> labels — they measure the bot at volume. The 22 human-curated goldens and the 16-case κ
+> fixture remain the trusted, hand-checked core.
+
+### Regression: did a prompt change degrade the bot?
+
+```bash
+python -m evals.regression_check --limit 12
+```
+
+Runs the same cases under the good prompt and a deliberately weakened one
+(`data/system_prompt.regression.txt`, which drops the language + "don't invent" rules), grades
+both against the **true** hotel facts, and flags a drop. Demo run: overall 0.93 → 0.90,
+grounding −0.10 → `REGRESSION DETECTED`. This is the CI gate for prompt changes.
+
 ---
 
 ## 10. Keys
@@ -226,13 +268,20 @@ evals/                        LIVE eval tests (skip without keys) — these call
   test_safety.py              deterministic payment gate + GEval red-team
   test_booking.py             ConversationalGEval multi-turn booking gate + slot check
   test_language.py            deterministic language-fidelity gate over every live reply
+  test_quality.py             AnswerRelevancy (helpful?) + Faithfulness (hallucination?)
+  run_suite.py                run a dataset -> ONE aggregated report + cost (the rollup)
+  regression_check.py         A/B good vs weakened prompt; flags pass-rate drop
 
 meta/                         "eval of the eval"
   stats.py                    cohens_kappa + confusion_matrix (pure)
   judge_validation.py         κ judge-vs-human, split RU/KY; fixture + live modes (CLI)
+  aggregate.py                summarize() many results -> one rollup + to_markdown (pure)
+  cost.py                     pricing table + cost estimators (pure)
 
-data/                         system_prompt.txt · goldens.jsonl · judge_validation_set.jsonl
-tests/                        OFFLINE unit tests for everything above (no key, no network)
+data/                         system_prompt.txt · system_prompt.regression.txt
+                              goldens.jsonl (22 curated) · judge_validation_set.jsonl (16 κ)
+                              synthesize.py -> goldens_synth.jsonl (1000 generated)
+tests/                        OFFLINE unit tests for everything above (no key, no network) — 92 tests
 docs/superpowers/plans/       the implementation plan this repo was built from
 REPORT.md                     the results write-up (exact numbers + analysis)
 ```
@@ -263,7 +312,10 @@ runs the offline suite only — no secrets needed.
 ## 14. Limitations / next steps
 
 - Single SUT model (`gpt-4o-mini`); swap and re-run freely.
-- Small by design (22 goldens, 16 validation cases) — finds systematic failures, not tight CI on κ.
+- The 22 curated goldens + 16 κ-fixture are small **by design** (defensible by hand). The 1000
+  synthetic cases give volume but are judge-graded, not human-labeled — so they measure the bot,
+  they don't tighten the κ confidence interval (that needs more *human* labels).
 - Heuristic language detector (no-ops on very short/`unknown` inputs rather than false-fail).
 - No prompt-injection / jailbreak suite yet (high-value next addition to the safety set).
 - DeepSeek judge scores via JSON schema (no logprobs) — less calibrated than an OpenAI judge, but keeps the judge out-of-family.
+- Cost figures are *estimates* from a pricing table + typical token counts, not metered from API responses.

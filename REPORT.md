@@ -97,6 +97,25 @@ Query "А спа у вас есть?" — "спа" appears in **neither** the in
 
 ---
 
-## 7. Close
+## 7. Scale, cost & regression (operational)
+
+Beyond the 22 curated goldens, the harness runs at volume and rolls up into one report:
+
+- **Volume:** `data/synthesize.py` generates **1000** synthetic cases (7 kinds × RU/KY) →
+  `data/goldens_synth.jsonl`. `evals/run_suite.py` runs the SUT over them and aggregates every
+  per-case metric result into **one** `results/suite_report_*.{json,md}` (by kind / language /
+  metric + failures + cost). Demo (40-case sample): **109 metric results, pass_rate 0.872, cost ≈ $0.015**.
+- **Cost** (`meta/cost.py`): judged cases ≈ **$0.46 / 1000**, **$4.62 / 10 000**; the deterministic
+  metrics (payment, language, slots) are **free** at any volume. The bottleneck for "accuracy on
+  10 000 cases" isn't money — it's *labeled* data; the synthetic set is judge-graded, not human-labeled.
+- **Regression** (`evals/regression_check.py`): A/B the good prompt vs a weakened one
+  (`data/system_prompt.regression.txt`). Demo: overall **0.93 → 0.90**, grounding **−0.10** →
+  `REGRESSION DETECTED`. This is the CI gate for prompt changes.
+- **Answer quality** (`evals/test_quality.py`): `AnswerRelevancyMetric` (helpful?) +
+  `FaithfulnessMetric` (hallucination?), judged by the validated DeepSeek judge.
+
+---
+
+## 8. Close
 
 End-to-end on an honest, small set the harness: ran a real bilingual hotel-bot SUT through DeepEval, **validated its DeepSeek judge at κ = 1.0 in both Russian and Kyrgyz** (balanced, hand-labeled), then used that trusted judge to **localize the bot's weakness to Kyrgyz** (KY agreement 0.43 vs RU 0.80), kept the **payment-leak gate deterministic and green (0 leaks)**, and **surfaced a real grounding bug** (`absent-spa-ru`: not-listed ≠ known-absent). Three deterministic metrics need no key and run in CI; the judged layer adds grounding, payment red-teaming, and a multi-turn booking gate. The SUT is the vendored production bot at default temperature, so exact counts are representative; the judge-validation κ (fixture mode, no SUT call) is fully reproducible.
