@@ -50,3 +50,17 @@ def test_run_falls_back_on_bad_json():
     out = BotRunner("SYS", llm).run([{"role": "user", "content": "хочу забронировать"}])
     assert out.reply  # non-empty fallback
     assert out.is_booking_intent is True  # keyword fallback fired on "забронировать"
+
+
+def test_build_system_prompt_prepends_date():
+    from sut.prompt import build_system_prompt
+    p = build_system_prompt("05.06.2026", base="HOTEL DATA")
+    assert p.startswith("Сегодня: 05.06.2026")
+    assert "HOTEL DATA" in p
+
+
+def test_load_system_prompt_reads_file():
+    from sut.prompt import load_system_prompt
+    text = load_system_prompt()
+    assert "Ала-Тоо" in text
+    assert "бассейн" in text  # absent-service ground truth present
