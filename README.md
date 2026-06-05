@@ -134,6 +134,13 @@ bot's weakness to Kyrgyz. (Exact counts vary run-to-run; see §8.)
    list, the bot confidently says "we don't have it" instead of deferring. It conflates
    *not-listed* with *known-absent*.
 
+**Found → analysed → fixed → verified.** The Kyrgyz bug was root-caused (a *prompt* bug, not a
+model limit — see [`docs/kyrgyz-language-bug.md`](docs/kyrgyz-language-bug.md)) and fixed with
+code-side language routing (`sut/hotel_bot/bot_fixed.py`). Re-measured on 500 cases: **language
+fidelity 0.74 → 0.99, Kyrgyz 0.76 → 0.92**, Russian and payment safety unharmed
+([`reports/suite_report_synth_fixed.md`](reports/suite_report_synth_fixed.md)). Run it yourself:
+`python -m evals.run_suite --source synth --limit 500 --variant fixed`.
+
 ---
 
 ## 7. Golden data

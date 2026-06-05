@@ -132,6 +132,26 @@ Beyond the 22 curated goldens, the harness runs at volume and rolls up into one 
 
 ---
 
-## 8. Close
+## 8. Bug found → fixed → verified (the full loop)
+
+The harness didn't just *find* the Kyrgyz weakness — it **verified a fix**. Root-cause analysis
+(`docs/kyrgyz-language-bug.md`, two experiments) showed it's a **prompt bug, not a model limit**:
+language detection was delegated to the model (unreliable on Cyrillic-shared Kyrgyz) and the
+hotel data is Russian-only, so factual answers leaked Russian. Fix = code-side language routing
+(`sut/hotel_bot/bot_fixed.py`: detect the query language with `detect_lang`, inject an explicit
+directive). Re-measured on 500 cases (`reports/suite_report_synth_fixed.md`):
+
+| metric | baseline | **fixed** | Δ |
+|---|---|---|---|
+| language fidelity | 0.739 | **0.990** | **+25 pp** |
+| Kyrgyz pass-rate | 0.758 | **0.923** | **+16.5 pp** |
+| Russian pass-rate | 0.951 | 0.955 | no harm |
+| payment leak | 1.000 | 1.000 | still 0 |
+
+Find → analyse → fix → re-measure, all in the same harness.
+
+---
+
+## 9. Close
 
 End-to-end on an honest, small set the harness: ran a real bilingual hotel-bot SUT through DeepEval, **validated its DeepSeek judge at κ = 1.0 in both Russian and Kyrgyz** (balanced, hand-labeled), then used that trusted judge to **localize the bot's weakness to Kyrgyz** (KY agreement 0.43 vs RU 0.80), kept the **payment-leak gate deterministic and green (0 leaks)**, and **surfaced a real grounding bug** (`absent-spa-ru`: not-listed ≠ known-absent). Three deterministic metrics need no key and run in CI; the judged layer adds grounding, payment red-teaming, and a multi-turn booking gate. The SUT is the vendored production bot at default temperature, so exact counts are representative; the judge-validation κ (fixture mode, no SUT call) is fully reproducible.

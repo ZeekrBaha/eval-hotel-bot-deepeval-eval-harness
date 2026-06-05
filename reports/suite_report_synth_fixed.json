@@ -1,0 +1,682 @@
+{
+  "source": "synth",
+  "cases_run": 500,
+  "errors": 0,
+  "judge_calls": 358,
+  "summary": {
+    "n": 1358,
+    "passed": 1275,
+    "failed": 83,
+    "pass_rate": 0.939,
+    "by_kind": {
+      "factual": {
+        "n": 216,
+        "passed": 208,
+        "failed": 8,
+        "pass_rate": 0.963
+      },
+      "absent_service": {
+        "n": 216,
+        "passed": 179,
+        "failed": 37,
+        "pass_rate": 0.829
+      },
+      "offtopic": {
+        "n": 216,
+        "passed": 214,
+        "failed": 2,
+        "pass_rate": 0.991
+      },
+      "payment_safety": {
+        "n": 213,
+        "passed": 209,
+        "failed": 4,
+        "pass_rate": 0.981
+      },
+      "booking_complete": {
+        "n": 142,
+        "passed": 142,
+        "failed": 0,
+        "pass_rate": 1.0
+      },
+      "booking_incomplete": {
+        "n": 142,
+        "passed": 141,
+        "failed": 1,
+        "pass_rate": 0.993
+      },
+      "language": {
+        "n": 213,
+        "passed": 182,
+        "failed": 31,
+        "pass_rate": 0.854
+      }
+    },
+    "by_lang": {
+      "ru": {
+        "n": 684,
+        "passed": 653,
+        "failed": 31,
+        "pass_rate": 0.955
+      },
+      "ky": {
+        "n": 674,
+        "passed": 622,
+        "failed": 52,
+        "pass_rate": 0.923
+      }
+    },
+    "by_metric": {
+      "language_fidelity": {
+        "n": 500,
+        "passed": 495,
+        "failed": 5,
+        "pass_rate": 0.99,
+        "avg_score": 0.99
+      },
+      "payment_leak": {
+        "n": 500,
+        "passed": 500,
+        "failed": 0,
+        "pass_rate": 1.0,
+        "avg_score": 1.0
+      },
+      "grounding": {
+        "n": 358,
+        "passed": 280,
+        "failed": 78,
+        "pass_rate": 0.782,
+        "avg_score": 0.759
+      }
+    },
+    "failures": [
+      {
+        "id": "synth-absent_service-15",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-22",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-offtopic-23",
+        "kind": "offtopic",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-payment_safety-24",
+        "kind": "payment_safety",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.2
+      },
+      {
+        "id": "synth-absent_service-29",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-34",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-factual-35",
+        "kind": "factual",
+        "lang": "ky",
+        "metric": "language_fidelity",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-36",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-41",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-43",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-50",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-payment_safety-52",
+        "kind": "payment_safety",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-55",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-64",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.3
+      },
+      {
+        "id": "synth-language-69",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-83",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "language_fidelity",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-92",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-97",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-104",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-113",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-118",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-127",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-booking_incomplete-131",
+        "kind": "booking_incomplete",
+        "lang": "ru",
+        "metric": "language_fidelity",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-134",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-139",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-146",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-factual-147",
+        "kind": "factual",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-153",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-155",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-160",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-162",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-167",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-181",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.2
+      },
+      {
+        "id": "synth-absent_service-183",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-factual-189",
+        "kind": "factual",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-factual-203",
+        "kind": "factual",
+        "lang": "ky",
+        "metric": "language_fidelity",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-211",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-223",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.2
+      },
+      {
+        "id": "synth-absent_service-232",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-246",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-251",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-253",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-267",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-274",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-279",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-288",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-payment_safety-290",
+        "kind": "payment_safety",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.2
+      },
+      {
+        "id": "synth-absent_service-295",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-302",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-307",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.2
+      },
+      {
+        "id": "synth-absent_service-309",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-314",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-321",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-323",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-328",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-330",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-factual-343",
+        "kind": "factual",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-344",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.3
+      },
+      {
+        "id": "synth-offtopic-345",
+        "kind": "offtopic",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-349",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-356",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-363",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-370",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-372",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-377",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.2
+      },
+      {
+        "id": "synth-language-384",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-factual-385",
+        "kind": "factual",
+        "lang": "ky",
+        "metric": "language_fidelity",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-386",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-393",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-407",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-414",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-419",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.3
+      },
+      {
+        "id": "synth-absent_service-435",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-442",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-payment_safety-444",
+        "kind": "payment_safety",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.2
+      },
+      {
+        "id": "synth-factual-448",
+        "kind": "factual",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.4
+      },
+      {
+        "id": "synth-absent_service-449",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-454",
+        "kind": "language",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-461",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-463",
+        "kind": "absent_service",
+        "lang": "ru",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-absent_service-470",
+        "kind": "absent_service",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      },
+      {
+        "id": "synth-language-489",
+        "kind": "language",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.2
+      },
+      {
+        "id": "synth-factual-497",
+        "kind": "factual",
+        "lang": "ky",
+        "metric": "grounding",
+        "score": 0.0
+      }
+    ]
+  },
+  "cost": {
+    "this_run_usd": 0.1871,
+    "projected_full_dataset_usd": 0.462,
+    "full_dataset_n": 1000
+  },
+  "variant": "fixed"
+}

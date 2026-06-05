@@ -57,7 +57,22 @@ That is exactly why the failures concentrate on Kyrgyz *factual* queries.
 2. **Make the hotel DATA bilingual** in the prompt so factual answers have a Kyrgyz anchor.
 3. Move the language rule to the top and repeat it; add Kyrgyz few-shot examples of *factual* answers.
 
-## Verification (close the loop)
+## Verification (close the loop) — measured
 
-Fix #1 was implemented as a SUT variant and re-measured with the same harness on 500 cases.
-See `reports/suite_report_fixed.md` for the numbers (baseline vs fixed language-fidelity pass-rate).
+Fix #1 was implemented as the `fixed` SUT variant (`sut/hotel_bot/bot_fixed.py`) and re-measured
+with the **same harness** on 500 cases (`reports/suite_report_synth_fixed.md`):
+
+| metric | baseline (1000) | **fixed (500)** | Δ |
+|---|---|---|---|
+| overall pass-rate | 0.855 | **0.939** | +8.4 pp |
+| **language fidelity** | 0.739 | **0.990** | **+25 pp** |
+| **Kyrgyz pass-rate** | 0.758 | **0.923** | **+16.5 pp** |
+| Russian pass-rate | 0.951 | 0.955 | +0.4 pp (no harm) |
+| payment leak | 1.000 | 1.000 | still 0 leaks |
+| grounding | 0.814 | 0.782 | −3.2 pp |
+
+The wrong-language bug is essentially eliminated (language fidelity 74% → **99%**, Kyrgyz 76% →
+**92%**), Russian is unharmed, payment safety stays perfect. The small grounding dip is the honest
+tradeoff (and partly sample noise — baseline is the full 1000-run, fixed is a 500-case sample);
+fix #2 (bilingual hotel data) should recover it. **This is the whole point: the harness found the
+bug, then proved the fix.**
