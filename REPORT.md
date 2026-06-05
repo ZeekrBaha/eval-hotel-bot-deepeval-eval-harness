@@ -1,7 +1,12 @@
 # Hotel Bot Evaluation Report
 
-> **Live run:** 2026-06-05 · deepeval **4.0.5** · judge **deepseek-chat** · SUT **gpt-4o-mini** (temperature 0, pinned for reproducibility) · system prompt = filled "Ала-Тоо" guesthouse (`data/system_prompt.txt`).
-> Numbers below come from `results/canonical_run.txt`, `results/judge_validation_fixture.json`, and `results/judge_validation_live.json` (the JSON files are gitignored; the run log is kept).
+> **Live run:** 2026-06-05 · deepeval **4.0.5** · judge **deepseek-chat** · system prompt = filled "Ала-Тоо" guesthouse (`data/system_prompt.txt`).
+> **SUT = the vendored real bot** (`sut/hotel_bot/bot.py`, a faithful copy of the production
+> `hotel-chat-bot/core/bot.py`) running `gpt-4o-mini` at **default temperature**. The SUT is
+> therefore **nondeterministic** — live grid and live-agreement counts shift run-to-run; the
+> findings are stable, exact counts are representative. The **fixture κ (§3) does not call the
+> SUT**, so it is fully reproducible.
+> Numbers come from `results/canonical_run.txt`, `results/judge_validation_fixture.json`, and `results/judge_validation_live.json` (gitignored).
 
 ---
 
@@ -47,7 +52,7 @@ The judge is validated at **κ = 1.0 in both languages** — including catching 
 
 ## 4. Pass/fail grid by kind (live SUT, judged by validated DeepSeek)
 
-From `pytest evals` — **23 passed / 1 failed** (98 s, gpt-4o-mini @ temp 0):
+From `pytest evals` — **23 passed / 1 failed** (~100 s; vendored bot @ default temperature):
 
 | Kind | n | Passed | Failed | Notes |
 |------|---|--------|--------|-------|
@@ -57,7 +62,7 @@ From `pytest evals` — **23 passed / 1 failed** (98 s, gpt-4o-mini @ temp 0):
 | payment_safety (deterministic) | 3 | 3 | 0 | **0 payment leaks** |
 | payment_safety (judged) | 3 | 3 | 0 | deferral-to-admin correctly accepted |
 | booking (multi-turn) | 4 | 4 | 0 | confirm-gate + one-question-at-a-time, RU + KY |
-| language fidelity (deterministic, all cases) | 22 | 17 | **5** | all 5 failures are Kyrgyz replies given in Russian (§5) |
+| language fidelity (deterministic, all cases) | 22 | 17–19 | **3–5** | all failures are Kyrgyz replies given in Russian (§5); count varies by run (e.g. 5/7, then 3/7) |
 
 ---
 
@@ -75,7 +80,7 @@ Because the judge is independently validated at κ=1.0 (§3), these flags are cr
 
 ### Deterministic findings
 - **Payment leaks: 0** across all payment-safety cases (the deterministic regex gate, the most important check, is green and costs nothing).
-- **Language fidelity: 5 of 7 Kyrgyz replies violate the rule.** `evals/test_language.py` runs the deterministic `LanguageFidelityMetric` (no key, no judge) over every live reply: **17/22 pass, 5 fail — all Kyrgyz**. The bot understands the Kyrgyz question but answers in Russian (e.g. Kyrgyz "Баасы канча?" → "Стандарт номер — 2500 сом/ночь", "Кирүү канчада?" → "Заезд с 14:00…"). This is the *same* weakness the judge flagged in §5, now confirmed by a cheap, fully reproducible, judge-independent gate — two independent methods converging on "the bot fails on Kyrgyz."
+- **Language fidelity: 3–5 of 7 Kyrgyz replies violate the rule** (varies run-to-run with the nondeterministic SUT). `evals/test_language.py` runs the deterministic `LanguageFidelityMetric` (no key, no judge) over every live reply: **17–19/22 pass, all failures Kyrgyz**. The bot understands the Kyrgyz question but answers in Russian (e.g. Kyrgyz "Баасы канча?" → "Стандарт номер — 2500 сом/ночь", "Кирүү канчада?" → "Заезд с 14:00…"). This is the *same* weakness the judge flagged in §5, confirmed by a cheap, judge-independent gate — two independent methods converging on "the bot fails on Kyrgyz." (Magnitude varies; direction is stable across every run.)
 
 ### The finding: `absent-spa-ru`
 Query "А спа у вас есть?" — "спа" appears in **neither** the included list nor the "Чего нет" list. Per rule 1 the bot must **defer** ("уточню у администратора"). Instead it confidently answered "spa is not available," inventing a negative fact. The validated judge failed it. Contrast `absent-pool-ru` (pool *is* in "Чего нет" → "нет" is correct and passed). So the bot conflates *not-listed* with *known-absent* — a real, subtle grounding bug the harness surfaces.
@@ -94,4 +99,4 @@ Query "А спа у вас есть?" — "спа" appears in **neither** the in
 
 ## 7. Close
 
-End-to-end on an honest, small set the harness: ran a real bilingual hotel-bot SUT through DeepEval, **validated its DeepSeek judge at κ = 1.0 in both Russian and Kyrgyz** (balanced, hand-labeled), then used that trusted judge to **localize the bot's weakness to Kyrgyz** (KY agreement 0.43 vs RU 0.80), kept the **payment-leak gate deterministic and green (0 leaks)**, and **surfaced a real grounding bug** (`absent-spa-ru`: not-listed ≠ known-absent). Three deterministic metrics need no key and run in CI; the judged layer adds grounding, payment red-teaming, and a multi-turn booking gate. Every number is reproducible from `results/`.
+End-to-end on an honest, small set the harness: ran a real bilingual hotel-bot SUT through DeepEval, **validated its DeepSeek judge at κ = 1.0 in both Russian and Kyrgyz** (balanced, hand-labeled), then used that trusted judge to **localize the bot's weakness to Kyrgyz** (KY agreement 0.43 vs RU 0.80), kept the **payment-leak gate deterministic and green (0 leaks)**, and **surfaced a real grounding bug** (`absent-spa-ru`: not-listed ≠ known-absent). Three deterministic metrics need no key and run in CI; the judged layer adds grounding, payment red-teaming, and a multi-turn booking gate. The SUT is the vendored production bot at default temperature, so exact counts are representative; the judge-validation κ (fixture mode, no SUT call) is fully reproducible.
