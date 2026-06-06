@@ -182,8 +182,8 @@ whole graph — this is what prevents the `openai`/`httpx`/`deepeval` conflict f
 
 ```bash
 # clone
-git clone https://github.com/ZeekrBaha/val-hotel-bot-deepeval-eval-harness.git
-cd val-hotel-bot-deepeval-eval-harness
+git clone https://github.com/ZeekrBaha/eval-hotel-bot-deepeval-eval-harness.git
+cd eval-hotel-bot-deepeval-eval-harness
 
 # setup (uv — recommended)
 uv sync                     # creates .venv from uv.lock, installs main + dev groups
