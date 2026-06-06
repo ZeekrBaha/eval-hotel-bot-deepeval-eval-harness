@@ -181,6 +181,10 @@ Dependencies are managed with **[uv](https://docs.astral.sh/uv/)** (lockfile `uv
 whole graph — this is what prevents the `openai`/`httpx`/`deepeval` conflict from recurring).
 
 ```bash
+# clone
+git clone https://github.com/ZeekrBaha/val-hotel-bot-deepeval-eval-harness.git
+cd val-hotel-bot-deepeval-eval-harness
+
 # setup (uv — recommended)
 uv sync                     # creates .venv from uv.lock, installs main + dev groups
 cp .env.example .env        # then fill in the two keys (see §10)
