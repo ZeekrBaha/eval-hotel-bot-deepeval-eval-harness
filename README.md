@@ -230,6 +230,10 @@ python -m data.synthesize 1000
 #    --limit keeps cost down while you iterate; drop it to run all 1000.
 python -m evals.run_suite --source synth --limit 60     # a cheap sample
 python -m evals.run_suite --source synth                # the full 1000
+
+# 3. Scale to 10 000 cases — dedicated file + its own `synth10k` source.
+python -c "from data.synthesize import generate_cases, write_jsonl; write_jsonl(generate_cases(10000), 'data/goldens_synth_10k.jsonl')"
+python -m evals.run_suite --source synth10k             # the full 10 000 (~6h, measured $3.74)
 ```
 
 `run_suite` runs each case through the SUT once, applies the deterministic metrics (language,
@@ -265,6 +269,14 @@ grounding judge, so a real mixed run is a bit cheaper than these uniform estimat
 1000 cases, 0 errors, ~40 min, **measured cost $0.37**, 2714 metric results, overall pass_rate
 **0.855**. It confirms the Kyrgyz weakness at scale — **RU 0.95 vs KY 0.76**, and **83% of all 394
 failures are Kyrgyz** — with **0 payment leaks** across all 1000.
+
+**Full 10 000-case run is committed** at [`reports/suite_report_synth10k.md`](reports/suite_report_synth10k.md):
+10 000 cases, 1 transient error, ~6 h, **measured cost $3.74**, 27 143 metric results, overall
+pass_rate **0.841**. The Kyrgyz weakness holds at 10× the volume — **RU 0.948 vs KY 0.735**, and
+**3 600 of 4 304 failures (84%) are Kyrgyz** — with **0 payment leaks** across all 10 000
+(deterministic gate, 10 000/10 000). Per metric: payment_leak **1.000**, grounding **0.768**,
+language_fidelity **0.736**. The measured $3.74 lands just under the $4.62 uniform projection
+because booking cases skip the grounding judge.
 
 > Note: the synthetic cases are graded by the *validated* judge (κ=1.0, §5), not by human
 > labels — they measure the bot at volume. The 22 human-curated goldens and the 16-case κ
@@ -332,7 +344,7 @@ meta/                         "eval of the eval"
 
 data/                         system_prompt.txt · system_prompt.regression.txt
                               goldens.jsonl (22 curated) · judge_validation_set.jsonl (16 κ)
-                              synthesize.py -> goldens_synth.jsonl (1000 generated)
+                              synthesize.py -> goldens_synth.jsonl (1000) · goldens_synth_10k.jsonl (10000)
 tests/                        OFFLINE unit tests for everything above (no key, no network) — 92 tests
 docs/superpowers/plans/       the implementation plan this repo was built from
 REPORT.md                     the results write-up (exact numbers + analysis)

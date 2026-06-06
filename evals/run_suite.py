@@ -33,6 +33,7 @@ from sut.prompt import load_system_prompt
 _SOURCES = {
     "goldens": "data/goldens.jsonl",
     "synth": "data/goldens_synth.jsonl",
+    "synth10k": "data/goldens_synth_10k.jsonl",
 }
 _BOOKING_KINDS = {"booking_complete", "booking_incomplete"}
 
