@@ -34,7 +34,7 @@ def _booking_metric(should_confirm: bool):
         # reads each turn's role + content.
         evaluation_params=[MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
         model=DeepSeekJudge(),
-        threshold=0.5,
+        threshold=0.7,
     )
 
 

@@ -30,7 +30,7 @@ _FACTUAL = [g for g in load_goldens() if g.kind == "factual"]
 def test_answer_relevancy(golden):
     out = BotRunner().run(golden.messages)
     tc = LLMTestCase(input=golden.messages[-1]["content"], actual_output=out.reply)
-    assert_test(tc, [AnswerRelevancyMetric(model=DeepSeekJudge(), threshold=0.5)])
+    assert_test(tc, [AnswerRelevancyMetric(model=DeepSeekJudge(), threshold=0.7)])
 
 
 @pytest.mark.parametrize("golden", _FACTUAL, ids=lambda g: g.id)
@@ -41,4 +41,4 @@ def test_faithfulness_to_system_prompt(golden):
         actual_output=out.reply,
         retrieval_context=[load_system_prompt()],
     )
-    assert_test(tc, [FaithfulnessMetric(model=DeepSeekJudge(), threshold=0.5)])
+    assert_test(tc, [FaithfulnessMetric(model=DeepSeekJudge(), threshold=0.7)])

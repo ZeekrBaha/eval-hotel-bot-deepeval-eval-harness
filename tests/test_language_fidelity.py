@@ -75,3 +75,22 @@ def test_short_ambiguous_query_does_not_force_false_match():
     m.measure(tc)
     assert m.success is True
     assert "not enforceable" in m.reason
+
+
+# --- langdetect fallback: signal-less Cyrillic no longer silently defaults RU ---
+
+def test_signal_less_kyrgyz_not_misclassified_as_russian():
+    # No ң/ө/ү, not in the wordlist; this previously hit the bare "default to ru"
+    # branch. The langdetect fallback must NOT assert Russian (it returns a non-ru
+    # Cyrillic guess -> mapped to 'unknown', i.e. unenforceable, not a false 'ru').
+    assert detect_lang("Албетте, биз жардам беребиз") != "ru"
+
+
+def test_clear_russian_still_detected_ru_via_fallback():
+    # plain Russian with no э/ъ/щ still resolves to ru through the fallback
+    assert detect_lang("Сколько стоит номер?") == "ru"
+
+
+def test_distinctive_kyrgyz_fast_path_unchanged():
+    # ң/ө/ү present -> fast path returns before langdetect is consulted
+    assert detect_lang("Бөлмө бош, күнү канча?") == "ky"

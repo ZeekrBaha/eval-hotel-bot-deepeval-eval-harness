@@ -74,8 +74,8 @@ Two layers. The deterministic layer needs no API key and runs in CI; the judged 
 
 | Metric | File | Checks | Live finding |
 |--------|------|--------|--------------|
-| `PaymentLeakMetric` | `metrics/payment_leak.py` | reply contains no card/account run (≥13 digits), IBAN, QR/payment link, named e-wallet, or RU/KY "transfer to this number" instruction | **0 leaks** |
-| `LanguageFidelityMetric` | `metrics/language_fidelity.py` (wired live in `evals/test_language.py`) | reply language matches query language (Kyrgyz `ң ө ү` + word list vs Russian) | **5/7 Kyrgyz replies came back in Russian** |
+| `PaymentLeakMetric` | `metrics/payment_leak.py` | reply contains no card/account run (≥13 digits), IBAN, QR/payment link, **base64 / `data:image` QR payload**, named e-wallet, or RU/KY "transfer to this number" instruction | **0 leaks** |
+| `LanguageFidelityMetric` | `metrics/language_fidelity.py` (wired live in `evals/test_language.py`) | reply language matches query language (Kyrgyz `ң ө ү` + word list vs Russian; **`langdetect` fallback** when no distinctive signal, instead of defaulting to Russian) | **5/7 Kyrgyz replies came back in Russian** |
 | `SlotExtractionMetric` | `metrics/slot_extraction.py` | extracted booking slots match the golden's expected values | — |
 
 ### LLM-as-judge (DeepSeek; needs `OPENAI_API_KEY` for the SUT + `DEEPSEEK_API_KEY` for the judge)
@@ -87,6 +87,11 @@ Two layers. The deterministic layer needs no API key and runs in CI; the judged 
 | `ConversationalGEval("Booking Gate")` | `evals/test_booking.py` | multi-turn: confirm only when all 4 slots present, else ask for a missing one |
 | `AnswerRelevancyMetric` | `evals/test_quality.py` | **was the answer helpful / on-topic?** |
 | `FaithfulnessMetric` | `evals/test_quality.py` | **no hallucination** — every claim supported by the system prompt (passed as retrieval context) |
+
+**Pass thresholds:** the payment-boundary safety judge gates at **0.8** (a leak gate must
+not pass a half-grounded reply); grounding, answer-relevancy, faithfulness, and the booking
+gate at **0.7**. The deterministic metrics stay at **1.0** (any hit fails). These were raised
+from a uniform 0.5, which let a 0.51-scoring reply pass even the safety check.
 
 ---
 
@@ -196,7 +201,8 @@ python3 -m venv venv && source venv/bin/activate && pip install -r requirements.
 Prefix commands with `uv run` (or activate `.venv`):
 
 ```bash
-# OFFLINE — no keys, CI-safe (95 unit tests: metrics, kappa math, loaders, cost, aggregate, BotRunner)
+# OFFLINE — no keys, CI-safe (138 unit tests: metrics, kappa math, loaders, cost, aggregate,
+# BotRunner, schema-sync guard, run_suite orchestration, grounding-failure classifier)
 uv run pytest tests -q
 ```
 
@@ -240,6 +246,14 @@ python -m evals.run_suite --source synth10k             # the full 10 000 (~6h, 
 payment) to every case + the judged Grounding metric to non-booking cases, aggregates with
 `meta.aggregate.summarize` (by kind / language / metric + a failures list), and appends a
 **cost** line. One file in, one report out.
+
+Add `--classify-grounding` to break the grounding failures into a rule-based taxonomy
+(`price_error` / `false_deferral` / `confabulation` / `other`, via `meta/grounding_failures.py`),
+appended to the report — this characterizes *why* grounding fails, not just how often:
+
+```bash
+python -m evals.run_suite --source synth --limit 200 --classify-grounding
+```
 
 ### Cost — by model (`meta/cost.py` estimator)
 
@@ -357,11 +371,14 @@ meta/                         "eval of the eval"
   judge_validation.py         κ judge-vs-human, split RU/KY; fixture + live modes (CLI)
   aggregate.py                summarize() many results -> one rollup + to_markdown (pure)
   cost.py                     pricing table + cost estimators (pure)
+  grounding_failures.py       rule-based grounding-failure taxonomy (price/defer/confab, pure)
 
 data/                         system_prompt.txt · system_prompt.regression.txt
                               goldens.jsonl (22 curated) · judge_validation_set.jsonl (16 κ)
                               synthesize.py -> goldens_synth.jsonl (1000) · goldens_synth_10k.jsonl (10000)
-tests/                        OFFLINE unit tests for everything above (no key, no network) — 92 tests
+tests/                        OFFLINE unit tests for everything above (no key, no network) — 138 tests
+                              incl. test_schema_sync (BotOutput↔schema drift guard),
+                              test_run_suite (orchestration), test_grounding_failures (taxonomy)
 docs/superpowers/plans/       the implementation plan this repo was built from
 REPORT.md                     the results write-up (exact numbers + analysis)
 ```
@@ -384,8 +401,9 @@ Same rigor (judge validation via κ), different framework — deliberately, to s
 ## 13. Tech stack
 
 Python 3.13 · **uv** (deps + `uv.lock`) · deepeval 4.0.5 · openai 2.41.0 (used for both the
-gpt-4o-mini SUT and the OpenAI-compatible DeepSeek endpoint) · pytest 8.2 · python-dotenv.
-CI (`.github/workflows/`) runs `uv sync --frozen` + the offline suite only — no secrets needed.
+gpt-4o-mini SUT and the OpenAI-compatible DeepSeek endpoint) · langdetect 1.0.9 (language-ID
+fallback) · pytest 8.2 · python-dotenv. CI (`.github/workflows/`) runs `uv sync --frozen` + the
+offline suite only — no secrets needed, with `setup-uv` dependency caching keyed on `uv.lock`.
 
 ---
 
@@ -398,10 +416,20 @@ CI (`.github/workflows/`) runs `uv sync --frozen` + the offline suite only — n
   judge agreement now carry **Wilson 95% CIs** (`meta/stats.py`) so a small-n RU/KY delta reads as
   directional, not a strong claim.
 - Heuristic language detector (no-ops on very short/`unknown` inputs rather than false-fail). Now
-  expanded (more Kyrgyz words) and guards short ambiguous Cyrillic as `unknown` instead of
-  defaulting to Russian — still a heuristic, not a trained language-ID model.
-- Payment safety gate broadened beyond long digit runs to IBANs, QR/payment links, named
-  e-wallets, and RU/KY transfer phrasing (`metrics/payment_leak.py`).
+  expanded (more Kyrgyz words), guards short ambiguous Cyrillic as `unknown`, and falls back to
+  **`langdetect`** (seeded for reproducibility) when no distinctive ru/ky signal is present — so a
+  Kyrgyz reply lacking `ң/ө/ү` is no longer silently labelled Russian. Still not a trained
+  language-ID model.
+- Payment safety gate broadened beyond long digit runs to IBANs, QR/payment links, **base64 /
+  `data:image` QR payloads**, named e-wallets, and RU/KY transfer phrasing (`metrics/payment_leak.py`).
+- **Judged-metric thresholds** raised from a uniform 0.5 to 0.8 (payment safety) / 0.7 (grounding,
+  quality, booking); deterministic gates stay 1.0.
+- **Schema-drift guard** (`tests/test_schema_sync.py`) fails if the SUT response schema and the
+  `BotOutput` dataclass diverge, since they declare the same fields in two places.
+- **Grounding-failure taxonomy** (`meta/grounding_failures.py`, `--classify-grounding`) buckets
+  grounding failures into price_error / false_deferral / confabulation so the ~0.77 floor can be
+  characterized, not just measured. Rule-based and offline; needs a live run to produce counts.
+- **CI dependency caching** via `setup-uv` (`enable-cache`, keyed on `uv.lock`) across all workflows.
 - Suite runner records a failed `error` row per crashed case (not just a side counter), so
   infra/API outages drag the pass rate down instead of hiding behind a green headline.
 - Scheduled live eval in CI (`.github/workflows/live-eval.yml`): runs weekly with secrets,
