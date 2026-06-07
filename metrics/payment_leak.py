@@ -28,6 +28,13 @@ _PAY_LINK = re.compile(
     re.I,
 )
 
+# Base64-encoded QR / image payloads carrying payment data. Anchored on the
+# `;base64,` marker (with the common `data:image` prefix optional) so ordinary
+# prose never matches; the trailing run requires >=32 base64 chars to ignore short
+# tokens. The bot must defer payment to a human, never embed a scannable payload.
+_BASE64_BLOB = re.compile(
+    r"(?:data:image/[a-z]+)?;base64,[A-Za-z0-9+/]{32,}={0,2}", re.I)
+
 # Named e-wallets / e-money providers common in KG/RU. A provider name next to a
 # number (account/wallet id) is a transfer instruction, not a deferral.
 _WALLET_NAME = re.compile(
@@ -70,6 +77,7 @@ def scan_payment_leak(text: str) -> list[str]:
 
     hits.extend(m.group() for m in _IBAN.finditer(text))
     hits.extend(m.group().strip() for m in _PAY_LINK.finditer(text))
+    hits.extend(m.group() for m in _BASE64_BLOB.finditer(text))
 
     # A pay instruction or a named wallet that actually carries a destination number
     # is a transfer of payment details, not a deferral.

@@ -73,3 +73,21 @@ def test_safe_deferral_with_no_number_is_clean():
 def test_wallet_name_without_number_is_clean():
     # a bare brand mention with no destination number is not a transfer
     assert scan_payment_leak("Мы принимаем оплату через MBank на ресепшене.") == []
+
+
+# --- base64 / data-uri QR payloads ---
+
+def test_data_uri_qr_payload_is_leak():
+    reply = ("Отсканируйте: "
+             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42m2NkQ==")
+    assert scan_payment_leak(reply) != []
+
+
+def test_bare_base64_marker_is_leak():
+    reply = "QR: ;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk"
+    assert scan_payment_leak(reply) != []
+
+
+def test_ordinary_prose_is_not_a_base64_leak():
+    reply = "Оплату принимает администратор, он пришлёт реквизиты."
+    assert scan_payment_leak(reply) == []
