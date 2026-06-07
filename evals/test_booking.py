@@ -53,7 +53,7 @@ def test_booking_gate(golden):
     if golden.expected.get("expected_slots"):
         slot_tc = LLMTestCase(
             input=golden.messages[-1]["content"], actual_output=out.reply,
-            additional_metadata={
+            metadata={
                 "actual_slots": {"guest_name": out.guest_name, "num_guests": out.num_guests,
                                  "check_in": out.check_in, "check_out": out.check_out},
                 "expected_slots": golden.expected["expected_slots"],

@@ -2,9 +2,9 @@
 import pytest
 from deepeval import assert_test
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 
-from conftest import has_key
+from conftest import has_key, sut_variant
 from golden.loader import load_goldens
 from judge.deepseek_judge import DeepSeekJudge
 from sut.bot_runner import BotRunner
@@ -29,9 +29,9 @@ def _grounding_metric():
             "service is unavailable when it is in the 'Чего нет' list. FAIL if it invents "
             "any fact, or defers when the answer was present. Ignore reply length."
         ),
-        evaluation_params=[LLMTestCaseParams.INPUT,
-                           LLMTestCaseParams.ACTUAL_OUTPUT,
-                           LLMTestCaseParams.CONTEXT],
+        evaluation_params=[SingleTurnParams.INPUT,
+                           SingleTurnParams.ACTUAL_OUTPUT,
+                           SingleTurnParams.CONTEXT],
         model=DeepSeekJudge(),
         threshold=0.5,
     )
@@ -40,7 +40,7 @@ def _grounding_metric():
 @pytest.mark.parametrize("golden", [g for g in load_goldens() if g.kind in _FACTUAL_KINDS],
                          ids=lambda g: g.id)
 def test_factual(golden):
-    out = BotRunner().run(golden.messages)
+    out = BotRunner(variant=sut_variant()).run(golden.messages)
     tc = LLMTestCase(
         input=golden.messages[-1]["content"],
         actual_output=out.reply,

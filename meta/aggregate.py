@@ -7,9 +7,12 @@ No external dependencies.
 
 from __future__ import annotations
 
+from meta.stats import wilson_interval
+
 
 def _group_stats(rows: list[dict], key: str) -> dict[str, dict]:
-    """Return per-value stats bucketed by `key`."""
+    """Return per-value stats bucketed by `key`, each with a Wilson 95% CI on the
+    pass rate so small-n deltas (e.g. RU vs KY) can be read as directional vs strong."""
     buckets: dict[str, list[dict]] = {}
     for row in rows:
         val = row[key]
@@ -20,11 +23,14 @@ def _group_stats(rows: list[dict], key: str) -> dict[str, dict]:
         n = len(bucket)
         passed = sum(1 for r in bucket if r["success"])
         failed = n - passed
+        lo, hi = wilson_interval(passed, n)
         result[val] = {
             "n": n,
             "passed": passed,
             "failed": failed,
             "pass_rate": round(passed / n, 3) if n else 0.0,
+            "ci_low": round(lo, 3),
+            "ci_high": round(hi, 3),
         }
     return result
 
@@ -51,6 +57,7 @@ def summarize(results: list[dict]) -> dict:
     passed = sum(1 for r in results if r["success"])
     failed = n - passed
     pass_rate = round(passed / n, 3) if n else 0.0
+    ci_low, ci_high = wilson_interval(passed, n)
 
     by_kind = _group_stats(results, "kind")
     by_lang = _group_stats(results, "lang")
@@ -67,11 +74,14 @@ def summarize(results: list[dict]) -> dict:
         m_failed = m_n - m_passed
         scores = [r["score"] for r in bucket]
         avg_score = round(sum(scores) / len(scores), 3) if scores else 0.0
+        m_lo, m_hi = wilson_interval(m_passed, m_n)
         by_metric[metric] = {
             "n": m_n,
             "passed": m_passed,
             "failed": m_failed,
             "pass_rate": round(m_passed / m_n, 3) if m_n else 0.0,
+            "ci_low": round(m_lo, 3),
+            "ci_high": round(m_hi, 3),
             "avg_score": avg_score,
         }
 
@@ -86,6 +96,8 @@ def summarize(results: list[dict]) -> dict:
         "passed": passed,
         "failed": failed,
         "pass_rate": pass_rate,
+        "ci_low": round(ci_low, 3),
+        "ci_high": round(ci_high, 3),
         "by_kind": by_kind,
         "by_lang": by_lang,
         "by_metric": by_metric,
@@ -101,10 +113,11 @@ def to_markdown(summary: dict, title: str = "Suite Report") -> str:
 
     lines.append(f"# {title}")
     lines.append("")
-    lines.append(
-        f"**Overall:** {summary['passed']}/{summary['n']} passed "
-        f"(pass_rate={summary['pass_rate']:.3f})"
-    )
+    overall = f"**Overall:** {summary['passed']}/{summary['n']} passed (pass_rate={summary['pass_rate']:.3f}"
+    if "ci_low" in summary and "ci_high" in summary:
+        overall += f", 95% CI [{summary['ci_low']:.3f}, {summary['ci_high']:.3f}]"
+    overall += ")"
+    lines.append(overall)
     lines.append("")
 
     # Helper to render a simple stats table
@@ -128,9 +141,10 @@ def to_markdown(summary: dict, title: str = "Suite Report") -> str:
             lines.append("| " + " | ".join(row_vals) + " |")
         lines.append("")
 
-    _render_table("By Kind", summary["by_kind"])
-    _render_table("By Language", summary["by_lang"])
-    _render_table("By Metric", summary["by_metric"], extra_cols=["avg_score"])
+    _render_table("By Kind", summary["by_kind"], extra_cols=["ci_low", "ci_high"])
+    _render_table("By Language", summary["by_lang"], extra_cols=["ci_low", "ci_high"])
+    _render_table("By Metric", summary["by_metric"],
+                  extra_cols=["ci_low", "ci_high", "avg_score"])
 
     # Failures list
     lines.append("## Failures")

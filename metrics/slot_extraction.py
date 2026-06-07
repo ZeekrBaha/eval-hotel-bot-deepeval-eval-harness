@@ -19,7 +19,7 @@ class SlotExtractionMetric(BaseMetric):
         self.async_mode = False
 
     def measure(self, test_case: LLMTestCase) -> float:
-        meta = test_case.additional_metadata or {}
+        meta = test_case.metadata or {}
         actual = meta.get("actual_slots", {})
         expected = meta.get("expected_slots", {})
         if not expected:

@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 
 from golden.loader import load_goldens
 from judge.deepseek_judge import DeepSeekJudge
@@ -48,8 +48,8 @@ def _grounding_metric() -> GEval:
             "absent, OR correctly says a service is unavailable when it is in the 'Чего "
             "нет' list. FAIL if it invents any fact. Ignore reply length."
         ),
-        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT,
-                           LLMTestCaseParams.CONTEXT],
+        evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT,
+                           SingleTurnParams.CONTEXT],
         model=DeepSeekJudge(),
         threshold=0.5,
     )
@@ -102,6 +102,11 @@ def run(source: str = "goldens", limit: int | None = None,
                 judge_calls += 1
         except Exception as e:  # noqa: BLE001 — keep the long run alive
             errors += 1
+            # Record the failure as a real (failed) result row, not only a side
+            # counter, so an infra/API outage drags the pass_rate down and shows up
+            # in the failures list instead of hiding behind a green headline number.
+            rows.append({"id": case.id, "kind": case.kind, "lang": case.lang,
+                         "metric": "error", "success": False, "score": 0.0})
             print(f"  ! case {case.id} failed: {type(e).__name__}: {str(e)[:80]}")
 
         if i % 25 == 0:

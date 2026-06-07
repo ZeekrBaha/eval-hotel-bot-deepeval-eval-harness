@@ -74,7 +74,7 @@ Two layers. The deterministic layer needs no API key and runs in CI; the judged 
 
 | Metric | File | Checks | Live finding |
 |--------|------|--------|--------------|
-| `PaymentLeakMetric` | `metrics/payment_leak.py` | reply contains no card/account/QR digits (≥13-digit run) | **0 leaks** |
+| `PaymentLeakMetric` | `metrics/payment_leak.py` | reply contains no card/account run (≥13 digits), IBAN, QR/payment link, named e-wallet, or RU/KY "transfer to this number" instruction | **0 leaks** |
 | `LanguageFidelityMetric` | `metrics/language_fidelity.py` (wired live in `evals/test_language.py`) | reply language matches query language (Kyrgyz `ң ө ү` + word list vs Russian) | **5/7 Kyrgyz replies came back in Russian** |
 | `SlotExtractionMetric` | `metrics/slot_extraction.py` | extracted booking slots match the golden's expected values | — |
 
@@ -293,6 +293,22 @@ Runs the same cases under the good prompt and a deliberately weakened one
 both against the **true** hotel facts, and flags a drop. Demo run: overall 0.93 → 0.90,
 grounding −0.10 → `REGRESSION DETECTED`. This is the CI gate for prompt changes.
 
+### Variant-aware live runs (baseline benchmark vs fixed regression)
+
+The live `evals/` default to the **baseline** SUT (the vendored production bot — a
+known-failing benchmark on Kyrgyz language + unlisted-service grounding). Point them at
+the **fixed** variant (code-side language routing + grounding guard, `sut/hotel_bot/bot_fixed.py`)
+for the should-pass regression run:
+
+```bash
+SUT_VARIANT=fixed .venv/bin/python -m pytest evals/test_language.py -q   # ru/ky in-language
+SUT_VARIANT=fixed .venv/bin/python -m pytest evals/test_factual.py  -q   # spa/transfer defer
+```
+
+CI mirrors this split: `test.yml` (offline, always-required) · `live-eval.yml` (scheduled,
+benchmarks baseline, gates only on deterministic payment safety) · `live-fixed-regression.yml`
+(manual `workflow_dispatch`, runs the fixed variant, every case expected green).
+
 ---
 
 ## 10. Keys
@@ -378,8 +394,19 @@ CI (`.github/workflows/`) runs `uv sync --frozen` + the offline suite only — n
 - Single SUT model (`gpt-4o-mini`); swap and re-run freely.
 - The 22 curated goldens + 16 κ-fixture are small **by design** (defensible by hand). The 1000
   synthetic cases give volume but are judge-graded, not human-labeled — so they measure the bot,
-  they don't tighten the κ confidence interval (that needs more *human* labels).
-- Heuristic language detector (no-ops on very short/`unknown` inputs rather than false-fail).
+  they don't tighten the κ confidence interval (that needs more *human* labels). Pass rates and
+  judge agreement now carry **Wilson 95% CIs** (`meta/stats.py`) so a small-n RU/KY delta reads as
+  directional, not a strong claim.
+- Heuristic language detector (no-ops on very short/`unknown` inputs rather than false-fail). Now
+  expanded (more Kyrgyz words) and guards short ambiguous Cyrillic as `unknown` instead of
+  defaulting to Russian — still a heuristic, not a trained language-ID model.
+- Payment safety gate broadened beyond long digit runs to IBANs, QR/payment links, named
+  e-wallets, and RU/KY transfer phrasing (`metrics/payment_leak.py`).
+- Suite runner records a failed `error` row per crashed case (not just a side counter), so
+  infra/API outages drag the pass rate down instead of hiding behind a green headline.
+- Scheduled live eval in CI (`.github/workflows/live-eval.yml`): runs weekly with secrets,
+  uploads JSON/Markdown artifacts, and gates only on the deterministic payment-safety signal +
+  an infra error-rate floor.
 - No prompt-injection / jailbreak suite yet (high-value next addition to the safety set).
 - DeepSeek judge scores via JSON schema (no logprobs) — less calibrated than an OpenAI judge, but keeps the judge out-of-family.
 - Cost figures are *estimates* from a pricing table + typical token counts, not metered from API responses.

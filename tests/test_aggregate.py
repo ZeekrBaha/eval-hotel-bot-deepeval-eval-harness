@@ -92,6 +92,27 @@ def test_by_lang_fr(summary):
 
 
 # ---------------------------------------------------------------------------
+# confidence intervals (Wilson) on pass rate
+# ---------------------------------------------------------------------------
+
+def test_overall_has_ci(summary):
+    assert summary["ci_low"] <= summary["pass_rate"] <= summary["ci_high"]
+    assert 0.0 <= summary["ci_low"] and summary["ci_high"] <= 1.0
+
+def test_by_lang_buckets_have_ci(summary):
+    for stats in summary["by_lang"].values():
+        assert stats["ci_low"] <= stats["pass_rate"] <= stats["ci_high"]
+
+def test_by_metric_buckets_have_ci(summary):
+    for stats in summary["by_metric"].values():
+        assert "ci_low" in stats and "ci_high" in stats
+
+def test_markdown_shows_ci(summary):
+    md = to_markdown(summary)
+    assert "CI" in md  # overall line carries the 95% CI
+
+
+# ---------------------------------------------------------------------------
 # by_metric
 # ---------------------------------------------------------------------------
 

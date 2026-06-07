@@ -18,7 +18,7 @@ import json
 import sys
 from pathlib import Path
 
-from meta.stats import cohens_kappa, confusion_matrix
+from meta.stats import cohens_kappa, confusion_matrix, wilson_interval
 
 _VALIDATION_SET = Path(__file__).resolve().parent.parent / "data" / "judge_validation_set.jsonl"
 
@@ -29,8 +29,12 @@ def _summ(rows: list[dict]) -> dict:
     tp, tn, fp, fn = confusion_matrix(human, judge)
     n = len(rows)
     agree = sum(1 for h, j in zip(human, judge) if h == j)
+    lo, hi = wilson_interval(agree, n)
     return {"n": n, "kappa": round(cohens_kappa(human, judge), 3),
             "agreement": round(agree / n, 3) if n else 0.0,
+            # Wilson 95% CI on agreement: at n≈8 per language the band is wide, so a
+            # RU vs KY gap is directional unless the intervals clearly separate.
+            "agreement_ci": [round(lo, 3), round(hi, 3)],
             "confusion": {"tp": tp, "tn": tn, "fp": fp, "fn": fn}}
 
 

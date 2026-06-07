@@ -7,7 +7,7 @@ def _case(actual_slots, expected_slots):
     return LLMTestCase(
         input="booking",
         actual_output="(reply)",
-        additional_metadata={"actual_slots": actual_slots, "expected_slots": expected_slots},
+        metadata={"actual_slots": actual_slots, "expected_slots": expected_slots},
     )
 
 

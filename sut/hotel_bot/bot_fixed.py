@@ -1,9 +1,15 @@
-"""Fixed SUT variant — deterministic language routing.
+"""Fixed SUT variant — deterministic language routing + grounding guard.
 
-Same bot as production EXCEPT: instead of trusting the model to detect the query
-language, we detect it in code (`detect_lang`) and inject an explicit directive into
-the system prompt. This is the fix for the Kyrgyz->Russian bug analysed in
-docs/kyrgyz-language-bug.md.
+Same bot as production EXCEPT for two injected system-prompt directives:
+
+1. LANGUAGE: instead of trusting the model to detect the query language, we detect
+   it in code (`detect_lang`) and inject an explicit directive. Fix for the
+   Kyrgyz->Russian bug analysed in docs/kyrgyz-language-bug.md.
+
+2. GROUNDING: reinforce the not-listed-vs-known-absent distinction so the bot defers
+   ("уточню у администратора") for services that appear nowhere (спа, трансфер)
+   instead of falsely claiming they are unavailable. Fix for absent-spa / unknown-
+   transfer grounding failures.
 
 Only `handle_message` differs from `sut.hotel_bot.bot`; every constant, the schema,
 the client, the db, and the parsing/fallback logic are reused from it, so the diff IS
@@ -25,6 +31,16 @@ _LANG_DIRECTIVE = {
            "— включая цены, адрес и любые данные отеля. Не используй русский."),
     "ru": ("\n\nВНИМАНИЕ: гость пишет на РУССКОМ языке. Ответь ТОЛЬКО на русском."),
 }
+
+# Always-on grounding guard: only services explicitly in the "Чего нет" list may be
+# called unavailable; anything not mentioned at all must be deferred, never denied.
+_GROUNDING_DIRECTIVE = (
+    "\n\nВНИМАНИЕ ПО ГРАУНДИНГУ: говори \"у нас нет\" ТОЛЬКО про услуги из списка "
+    "\"Чего нет\" (бассейн, ресторан). Если про услугу нигде не сказано (например "
+    "спа, трансфер, сауна, бар) — НЕ утверждай, что её нет. Ответь: \"Уточню у "
+    "администратора и вернусь к вам\" (по-кыргызски: \"Администраторго сурап, кайра "
+    "кабарлайм\")."
+)
 
 
 def _language_directive(message_text: str) -> str:
@@ -49,8 +65,9 @@ def handle_message(platform: str, sender_id: str, message_text: str) -> dict:
 
     client = _get_openai_client()
     t0 = time.monotonic()
-    # THE FIX: append a code-detected language directive to the system prompt.
-    system_prompt = f"Сегодня: {_today()}\n\n{get_system_prompt()}{_language_directive(message_text)}"
+    # THE FIX: append a code-detected language directive + the grounding guard.
+    system_prompt = (f"Сегодня: {_today()}\n\n{get_system_prompt()}"
+                     f"{_language_directive(message_text)}{_GROUNDING_DIRECTIVE}")
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         max_completion_tokens=400,

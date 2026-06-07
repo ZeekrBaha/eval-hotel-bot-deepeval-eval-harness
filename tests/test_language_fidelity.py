@@ -38,3 +38,40 @@ def test_metric_passes_when_query_language_unknown():
     m = LanguageFidelityMetric()
     m.measure(tc)
     assert m.success is True  # cannot demand a language we couldn't detect
+
+
+# --- hardening: short ambiguous Cyrillic + expanded Kyrgyz word list ---
+
+def test_very_short_ambiguous_cyrillic_is_unknown():
+    # 2 Cyrillic letters, no KY/RU-distinctive signal -> undecidable, not defaulted RU
+    assert detect_lang("ок") == "unknown"
+
+
+def test_short_russian_distinctive_letter_still_ru():
+    # "это" carries 'э' (RU-only) -> still detectable despite being short
+    assert detect_lang("это") == "ru"
+
+
+def test_expanded_kyrgyz_word_detected_without_special_letters():
+    # "кандай" has no ң/ө/ү but is unambiguously Kyrgyz
+    assert detect_lang("Кандай бааси?") == "ky"
+
+
+def test_offtopic_joke_kyrgyz_is_ky():
+    # live golden that previously fell through to Russian (no ң/ө/ү present)
+    assert detect_lang("Мага тамаша айтып берчи.") == "ky"
+
+
+def test_kyrgyz_address_reply_detected_as_ky():
+    # live fact-address-ky reply; previously 'ru' because 'ы' was treated RU-only
+    assert detect_lang("Биздин дарегибиз: Бишкек ш., Ибраимова 42.") == "ky"
+
+
+def test_short_ambiguous_query_does_not_force_false_match():
+    # short undecidable query -> metric cannot demand a language -> passes (no silent
+    # coin-flip "ru==ru" match)
+    tc = LLMTestCase(input="ок", actual_output="Стандартный номер 2500 сом.")
+    m = LanguageFidelityMetric()
+    m.measure(tc)
+    assert m.success is True
+    assert "not enforceable" in m.reason

@@ -16,12 +16,30 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 
 _KY_ONLY = set("ңөү")          # Kyrgyz Cyrillic letters not used in Russian
-_RU_ONLY = set("ыэъщ")         # common in Russian, rare/absent in Kyrgyz
+# NOTE: 'ы' is NOT here — it is common in Kyrgyz too (e.g. "дарегибиз", "баасы"), so
+# using it as a Russian signal misclassifies Kyrgyz replies. Keep only ru-distinctive
+# letters that are genuinely rare/absent in Kyrgyz.
+_RU_ONLY = set("эъщ")
 _CYRILLIC = lambda c: "Ѐ" <= c <= "ӿ"
 # Common Kyrgyz words that don't appear in Russian; used as secondary signal
-# when distinctive letters are absent.
-_KY_WORDS = {"канча", "баасы", "бармы", "жок", "рахмат", "кечиресиз",
-             "атыңыз", "атым", "брондоо", "бронь", "дарегиңер"}
+# when distinctive letters are absent. Kept to KY-distinct tokens so a Russian
+# sentence can't accidentally contain one (ambiguous shared words are excluded).
+_KY_WORDS = {"канча", "канчадан", "баасы", "бармы", "жок", "рахмат",
+             "кечиресиз", "атыңыз", "атым", "брондоо", "бронь", "дарегиңер",
+             "саламатсызбы", "кандай", "качан", "ооба", "макул", "керекпи",
+             "болобу", "саламатчылык",
+             # off-topic / conversational Kyrgyz that lacks ң/ө/ү (e.g. the
+             # "tell me a joke" golden: "Мага тамаша айтып берчи."). Kept to tokens
+             # with no Russian collision ("сага"/"мага" differ — "сага"=RU saga, excluded).
+             "мага", "тамаша", "айтып", "берчи", "айтчы",
+             # address reply that contains only ы as a "Cyrillic" hint
+             # ("Биздин дарегибиз: …") — distinctly Kyrgyz possessives.
+             "биздин", "дарегибиз"}
+
+# Below this many Cyrillic letters, an input with no KY/RU-distinctive signal is
+# genuinely undecidable (e.g. "ок", "да"). Returning "unknown" instead of defaulting
+# to Russian stops the metric from silently scoring a coin-flip as a match.
+_MIN_CYRILLIC_FOR_DEFAULT = 4
 
 
 def detect_lang(text: str) -> str:
@@ -33,9 +51,12 @@ def detect_lang(text: str) -> str:
         return "ky"
     if any(c in _RU_ONLY for c in low):
         return "ru"
-    if any(_CYRILLIC(c) for c in low):
-        return "ru"  # Cyrillic with no distinguishing letters -> default Russian
-    return "unknown"
+    cyrillic = [c for c in low if _CYRILLIC(c)]
+    if not cyrillic:
+        return "unknown"
+    if len(cyrillic) < _MIN_CYRILLIC_FOR_DEFAULT:
+        return "unknown"  # too short to default safely to Russian
+    return "ru"  # enough Cyrillic, no distinguishing signal -> default Russian
 
 
 class LanguageFidelityMetric(BaseMetric):

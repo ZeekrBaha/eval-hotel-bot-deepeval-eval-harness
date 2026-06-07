@@ -1,0 +1,33 @@
+name: live-fixed-regression
+
+# Manually-triggered "should-pass" regression lane: runs the live language +
+# grounding evals against the FIXED SUT variant (code-side language routing +
+# grounding guard). Unlike live-eval (which benchmarks the baseline and gates only on
+# deterministic safety), every case here is expected to pass, so the job is required
+# green when run. Kept on workflow_dispatch because it spends API credits.
+on:
+  workflow_dispatch:
+
+jobs:
+  live-fixed-regression:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}      # drives the SUT
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}  # drives the judge
+      SYSTEM_PROMPT_PATH: data/system_prompt.txt         # pin SUT to known ground-truth
+      SUT_VARIANT: fixed                                 # the should-pass variant
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - run: uv sync --frozen
+
+      - name: Language fidelity (fixed) — every ru/ky golden answered in-language
+        run: uv run python -m pytest evals/test_language.py -q
+
+      - name: Grounding (fixed) — unlisted services defer instead of denying
+        run: uv run python -m pytest evals/test_factual.py -q

@@ -1,5 +1,23 @@
 # meta/stats.py
 """Pure agreement statistics for judge validation. No dependencies."""
+import math
+
+
+def wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """95%-by-default Wilson score interval for a binomial proportion.
+
+    Used to put a confidence band on pass rates / agreement so a small-n RU vs KY
+    delta reads as "directional" (overlapping bands) rather than a strong claim.
+    Wilson is preferred over the normal approximation at small n and near 0/1.
+    Returns (low, high) clamped to [0, 1]; n <= 0 -> (0.0, 0.0).
+    """
+    if n <= 0:
+        return (0.0, 0.0)
+    p = successes / n
+    denom = 1.0 + z * z / n
+    center = (p + z * z / (2 * n)) / denom
+    margin = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
+    return (max(0.0, center - margin), min(1.0, center + margin))
 
 
 def cohens_kappa(a: list[bool], b: list[bool]) -> float:
