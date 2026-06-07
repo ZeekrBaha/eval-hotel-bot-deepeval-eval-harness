@@ -14,6 +14,9 @@ import re
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
+from langdetect import detect as _ld_detect, DetectorFactory, LangDetectException
+
+DetectorFactory.seed = 0  # make langdetect deterministic / reproducible
 
 _KY_ONLY = set("ңөү")          # Kyrgyz Cyrillic letters not used in Russian
 # NOTE: 'ы' is NOT here — it is common in Kyrgyz too (e.g. "дарегибиз", "баасы"), so
@@ -56,7 +59,20 @@ def detect_lang(text: str) -> str:
         return "unknown"
     if len(cyrillic) < _MIN_CYRILLIC_FOR_DEFAULT:
         return "unknown"  # too short to default safely to Russian
-    return "ru"  # enough Cyrillic, no distinguishing signal -> default Russian
+    # Enough Cyrillic but no distinctive ru/ky signal. Instead of blindly defaulting
+    # to Russian (which silently mislabels Kyrgyz replies lacking ң/ө/ү), consult
+    # langdetect. It has no Kyrgyz model, so: trust an explicit 'ru'; treat Turkic
+    # guesses as ky; anything else (e.g. 'mk'/'bg' on Kyrgyz Cyrillic) is too
+    # uncertain to enforce -> 'unknown'.
+    try:
+        guess = _ld_detect(text)
+    except LangDetectException:
+        return "unknown"
+    if guess == "ru":
+        return "ru"
+    if guess in {"tr", "az", "kk", "uz", "ky"}:
+        return "ky"
+    return "unknown"
 
 
 class LanguageFidelityMetric(BaseMetric):
