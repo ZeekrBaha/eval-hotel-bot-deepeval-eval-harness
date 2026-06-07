@@ -24,6 +24,7 @@ from deepeval.test_case import LLMTestCase, SingleTurnParams
 from golden.loader import load_goldens
 from judge.deepseek_judge import DeepSeekJudge
 from meta import aggregate, cost
+from meta.grounding_failures import classify_all
 from metrics.language_fidelity import LanguageFidelityMetric
 from metrics.payment_leak import PaymentLeakMetric
 from sut.bot_runner import BotRunner
@@ -62,7 +63,8 @@ def _row(case, metric_name, metric) -> dict:
 
 
 def run(source: str = "goldens", limit: int | None = None,
-        sut_prompt_path: str | None = None, variant: str = "baseline") -> dict:
+        sut_prompt_path: str | None = None, variant: str = "baseline",
+        classify_grounding: bool = False) -> dict:
     cases = load_goldens(Path(_SOURCES[source]))
     if limit is not None:
         cases = cases[:limit]
@@ -78,6 +80,7 @@ def run(source: str = "goldens", limit: int | None = None,
     grounding = _grounding_metric()  # one instance: evaluation steps generated once
 
     rows: list[dict] = []
+    grounding_fail_rows: list[dict] = []  # replies that failed grounding, for taxonomy
     judge_calls = 0
     errors = 0
     for i, case in enumerate(cases, 1):
@@ -100,6 +103,8 @@ def run(source: str = "goldens", limit: int | None = None,
                                               context=[system_prompt]))
                 rows.append(_row(case, "grounding", grounding))
                 judge_calls += 1
+                if not grounding.success:
+                    grounding_fail_rows.append({"id": case.id, "reply": out.reply})
         except Exception as e:  # noqa: BLE001 — keep the long run alive
             errors += 1
             # Record the failure as a real (failed) result row, not only a side
@@ -113,6 +118,11 @@ def run(source: str = "goldens", limit: int | None = None,
             print(f"  ...{i}/{len(cases)} cases ({errors} errors)")
 
     summary = aggregate.summarize(rows)
+
+    if classify_grounding:
+        buckets = classify_all(grounding_fail_rows, system_prompt)
+        summary["grounding_failures"] = buckets
+        print(f"Grounding failure taxonomy ({len(grounding_fail_rows)} failures): {buckets}")
 
     # cost: this run = N SUT calls + judge_calls judge calls; project the full source too.
     run_cost = (len(cases) * cost.estimate_case_cost(judged_metrics=0)["sut"]
@@ -142,9 +152,12 @@ def main() -> None:
     ap.add_argument("--sut-prompt", default=None,
                     help="override the SUT system prompt (e.g. data/system_prompt.bilingual.txt)")
     ap.add_argument("--tag", default=None, help="suffix for the output filenames")
+    ap.add_argument("--classify-grounding", action="store_true",
+                    help="append a rule-based grounding-failure taxonomy to the report")
     args = ap.parse_args()
 
-    report = run(args.source, args.limit, sut_prompt_path=args.sut_prompt, variant=args.variant)
+    report = run(args.source, args.limit, sut_prompt_path=args.sut_prompt,
+                 variant=args.variant, classify_grounding=args.classify_grounding)
     report["variant"] = args.variant
     Path("results").mkdir(exist_ok=True)
     tag = args.source if args.variant == "baseline" else f"{args.source}_{args.variant}"
