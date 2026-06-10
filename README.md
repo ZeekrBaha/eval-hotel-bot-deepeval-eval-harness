@@ -48,6 +48,15 @@ The bot under test is **vendored** into this repo so the harness is self-contain
 There is **one** SUT, the vendored real bot. There is no re-implementation. The production
 repo (`hotel-chat-bot`) is a *separate* project; this repo only borrows its `bot.py`.
 
+### The improved variant — `sut/hotel_bot/bot_fixed.py`
+
+One deliberate exception to "don't touch the bot": `sut/hotel_bot/bot_fixed.py` is the
+**improved** bot variant carrying the fixes from §6 (code-side language routing + grounding
+guard). Select it with `SUT_VARIANT=fixed`; the baseline stays the default. The two variants
+are A/B-compared by the CI lanes: `live-eval.yml` benchmarks the known-failing **baseline**,
+while the manual `live-fixed-regression.yml` workflow runs the same live language + grounding
+evals against the **fixed** variant and requires every case green (see §9).
+
 ---
 
 ## 3. What the bot does (the behavior we grade)
@@ -272,6 +281,11 @@ language, slots) cost **$0**.
 | **1 000** | **$0.15** | **$0.31** | **≈ $0.46** |
 | **10 000** | **$1.53** | **$3.09** | **≈ $4.62** |
 
+> This table is **theoretical** (pricing × typical token counts). The **measured** costs of
+> actual runs are recorded in the committed reports under `reports/` — $0.37 for the
+> 1000-case run, $3.74 for the 10 000-case run — and every `run_suite` report appends its
+> own measured cost line.
+
 So for the model we mostly use here — **`gpt-4o-mini` (the SUT) costs ~$0.15 per 1 000 cases and
 ~$1.53 per 10 000**; the DeepSeek judge roughly doubles it. If you run only the free deterministic
 gates (no judge), 10 000 cases cost just the **$1.53** of gpt-4o-mini calls. Booking cases skip the
@@ -342,6 +356,7 @@ Optional overrides in `.env.example`: `SYSTEM_PROMPT_PATH`, `DEEPSEEK_BASE_URL`,
 ```
 sut/                          THE SYSTEM UNDER TEST (vendored real bot)
   hotel_bot/bot.py            faithful copy of hotel-chat-bot/core/bot.py (do not edit logic)
+  hotel_bot/bot_fixed.py      improved variant (language routing + grounding guard); SUT_VARIANT=fixed
   hotel_bot/db.py             in-memory stand-in for Supabase (reset/set_history helpers)
   bot_runner.py               BotRunner: drives the vendored bot; returns BotOutput
   prompt.py                   load_system_prompt() for judge context
