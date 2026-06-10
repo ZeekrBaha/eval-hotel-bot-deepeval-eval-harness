@@ -36,7 +36,8 @@ class SlotExtractionMetric(BaseMetric):
         return self.measure(test_case)
 
     def is_successful(self) -> bool:
-        return self.success
+        # BaseMetric types success as bool | None (unset before measure()).
+        return bool(self.success)
 
     @property
     def __name__(self):

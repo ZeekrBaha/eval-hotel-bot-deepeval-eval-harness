@@ -88,7 +88,8 @@ class LanguageFidelityMetric(BaseMetric):
 
     def measure(self, test_case: LLMTestCase) -> float:
         q = detect_lang(test_case.input)
-        a = detect_lang(test_case.actual_output)
+        # actual_output is Optional on LLMTestCase; "" detects as "unknown".
+        a = detect_lang(test_case.actual_output or "")
         if q == "unknown" or a == "unknown":
             self.score, self.success = 1.0, True
             self.reason = f"query={q}, reply={a}: language not enforceable"
@@ -102,7 +103,8 @@ class LanguageFidelityMetric(BaseMetric):
         return self.measure(test_case)
 
     def is_successful(self) -> bool:
-        return self.success
+        # BaseMetric types success as bool | None (unset before measure()).
+        return bool(self.success)
 
     @property
     def __name__(self):

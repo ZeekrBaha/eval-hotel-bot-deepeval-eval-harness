@@ -60,7 +60,7 @@ def _isolate(monkeypatch):
 
 def _use(responses) -> _FakeOpenAI:
     fake = _FakeOpenAI(responses)
-    bot._openai_client = fake
+    bot._openai_client = fake  # type: ignore[assignment]  # test double for OpenAI client
     return fake
 
 

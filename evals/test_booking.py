@@ -1,6 +1,6 @@
 # evals/test_booking.py
 import pytest
-from deepeval import assert_test
+from deepeval.evaluate import assert_test
 from deepeval.metrics import ConversationalGEval
 from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.test_case import LLMTestCase

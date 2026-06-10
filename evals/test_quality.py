@@ -8,7 +8,7 @@
 Both judged by the out-of-family DeepSeek judge. Run on the factual goldens.
 """
 import pytest
-from deepeval import assert_test
+from deepeval.evaluate import assert_test
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 from deepeval.test_case import LLMTestCase
 

@@ -15,7 +15,10 @@ from deepeval.models import DeepEvalBaseLLM
 class DeepSeekJudge(DeepEvalBaseLLM):
     def __init__(self, model: str | None = None, api_key: str | None = None,
                  base_url: str | None = None):
-        self.model = model or os.environ.get("DEEPSEEK_JUDGE_MODEL", "deepseek-chat")
+        # DeepEvalBaseLLM declares `model` as the loaded client object; here it is
+        # the model *name* string (the client lives in self._client), hence the ignore.
+        default_model = os.environ.get("DEEPSEEK_JUDGE_MODEL", "deepseek-chat")
+        self.model = model or default_model  # type: ignore[assignment]
         self._api_key = api_key or os.environ.get("DEEPSEEK_API_KEY", "")
         self._base_url = base_url or os.environ.get("DEEPSEEK_BASE_URL",
                                                     "https://api.deepseek.com")

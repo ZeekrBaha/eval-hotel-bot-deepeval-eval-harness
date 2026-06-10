@@ -497,6 +497,8 @@ def generate_cases(n: int = 1000, seed: int = 0) -> list[dict]:  # noqa: ARG001
         if builder is not None:
             partial = builder(lang, i)
         else:
+            # _KIND_BUILDERS invariant: kinds without a builder always carry pools.
+            assert ru_pool is not None and ky_pool is not None
             pool = ru_pool if lang == "ru" else ky_pool
             partial = _simple_case(pool, lang, i)
 

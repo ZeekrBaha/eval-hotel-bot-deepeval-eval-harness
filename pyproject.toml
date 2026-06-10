@@ -14,6 +14,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mypy>=1.13",
     "pytest==8.2.0",
     "pytest-mock==3.14.0",
     "ruff>=0.8.0",
@@ -30,3 +31,17 @@ line-length = 100
 [tool.ruff.lint.per-file-ignores]
 # sut/hotel_bot/ is vendored bot code under evaluation — don't lint-edit it.
 "sut/hotel_bot/*" = ["E501"]
+
+[tool.mypy]
+# Gradual baseline, not strict: the gate is "mypy passes", not full coverage.
+python_version = "3.13"
+# deepeval and langdetect ship without type stubs.
+ignore_missing_imports = true
+# Vendored bot code under evaluation is not type-checked or edited.
+exclude = ["sut/hotel_bot/", "venv/", "\\.venv"]
+
+[[tool.mypy.overrides]]
+# exclude only stops directory discovery; these modules are still followed via
+# imports from the harness, so silence their errors explicitly too.
+module = "sut.hotel_bot.*"
+ignore_errors = true

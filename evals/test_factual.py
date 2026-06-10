@@ -1,6 +1,6 @@
 # evals/test_factual.py
 import pytest
-from deepeval import assert_test
+from deepeval.evaluate import assert_test
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 

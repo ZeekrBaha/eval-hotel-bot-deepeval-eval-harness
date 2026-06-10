@@ -3,12 +3,18 @@ dataclass the harness maps it into. The two declare the same field set in two
 places (bot._RESPONSE_FORMAT and bot_runner.BotOutput); this test fails loudly if
 either side gains or loses a field.
 """
+from typing import Any, cast
+
 from sut.bot_runner import BotOutput
 from sut.hotel_bot import bot
 
+# The nested literal defeats mypy's inference (values collapse to Collection[str]);
+# cast once so the tests can index into it.
+_RESPONSE_FORMAT = cast(dict[str, Any], bot._RESPONSE_FORMAT)
+
 
 def _schema_required() -> set[str]:
-    return set(bot._RESPONSE_FORMAT["json_schema"]["schema"]["required"])
+    return set(_RESPONSE_FORMAT["json_schema"]["schema"]["required"])
 
 
 def test_botoutput_fields_match_schema_required():
@@ -19,5 +25,5 @@ def test_botoutput_fields_match_schema_required():
 
 
 def test_schema_properties_match_required():
-    schema = bot._RESPONSE_FORMAT["json_schema"]["schema"]
+    schema = _RESPONSE_FORMAT["json_schema"]["schema"]
     assert set(schema["properties"]) == set(schema["required"])
