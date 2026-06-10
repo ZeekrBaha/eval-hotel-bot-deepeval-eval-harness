@@ -16,9 +16,17 @@ dependencies = [
 dev = [
     "pytest==8.2.0",
     "pytest-mock==3.14.0",
+    "ruff>=0.8.0",
 ]
 
 [tool.uv]
 # This is an application run via module imports (sut/, evals/, meta/...), not an
 # installable package, so don't try to build/install the project itself.
 package = false
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint.per-file-ignores]
+# sut/hotel_bot/ is vendored bot code under evaluation — don't lint-edit it.
+"sut/hotel_bot/*" = ["E501"]

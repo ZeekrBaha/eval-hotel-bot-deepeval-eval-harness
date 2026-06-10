@@ -1,7 +1,6 @@
-import math
 import pytest
 
-from meta.cost import PRICING, cost_for, estimate_case_cost, estimate_suite_cost
+from meta.cost import cost_for, estimate_case_cost, estimate_suite_cost
 
 
 # ---------------------------------------------------------------------------

@@ -23,7 +23,13 @@ _KY_ONLY = set("ңөү")          # Kyrgyz Cyrillic letters not used in Russian
 # using it as a Russian signal misclassifies Kyrgyz replies. Keep only ru-distinctive
 # letters that are genuinely rare/absent in Kyrgyz.
 _RU_ONLY = set("эъщ")
-_CYRILLIC = lambda c: "Ѐ" <= c <= "ӿ"
+
+
+def _cyrillic(c: str) -> bool:
+    return "Ѐ" <= c <= "ӿ"
+
+
+
 # Common Kyrgyz words that don't appear in Russian; used as secondary signal
 # when distinctive letters are absent. Kept to KY-distinct tokens so a Russian
 # sentence can't accidentally contain one (ambiguous shared words are excluded).
@@ -54,7 +60,7 @@ def detect_lang(text: str) -> str:
         return "ky"
     if any(c in _RU_ONLY for c in low):
         return "ru"
-    cyrillic = [c for c in low if _CYRILLIC(c)]
+    cyrillic = [c for c in low if _cyrillic(c)]
     if not cyrillic:
         return "unknown"
     if len(cyrillic) < _MIN_CYRILLIC_FOR_DEFAULT:

@@ -1,11 +1,11 @@
 # tests/test_judge_validation.py
+from meta.judge_validation import kappa_by_language, load_validation_set
+
+
 def test_deepseek_judge_constructs_without_network():
     from judge.deepseek_judge import DeepSeekJudge
     j = DeepSeekJudge(api_key="dummy")  # no call made -> no network
     assert j.get_model_name().startswith("deepseek")
-
-
-from meta.judge_validation import kappa_by_language, load_validation_set
 
 
 def test_validation_set_is_balanced_and_bilingual():
