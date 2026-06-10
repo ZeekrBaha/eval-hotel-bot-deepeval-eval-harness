@@ -12,4 +12,6 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
       - run: uv sync --frozen          # install from uv.lock exactly
+      - run: uv run ruff check .        # lint gate
+      - run: uv run mypy .              # type-check gate (gradual baseline)
       - run: uv run pytest tests -q     # only offline tests; evals/ skip without keys
