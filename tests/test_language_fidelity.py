@@ -1,6 +1,14 @@
 # tests/test_language_fidelity.py
+import pytest
 from metrics.language_fidelity import detect_lang, LanguageFidelityMetric
 from deepeval.test_case import LLMTestCase
+
+
+@pytest.fixture(autouse=True)
+def _clear_detect_lang_cache():
+    detect_lang.cache_clear()
+    yield
+    detect_lang.cache_clear()
 
 
 def test_detect_kyrgyz_by_special_letters():
@@ -94,3 +102,23 @@ def test_clear_russian_still_detected_ru_via_fallback():
 def test_distinctive_kyrgyz_fast_path_unchanged():
     # ң/ө/ү present -> fast path returns before langdetect is consulted
     assert detect_lang("Бөлмө бош, күнү канча?") == "ky"
+
+
+def test_detect_lang_has_lru_cache():
+    """detect_lang should be wrapped with lru_cache for performance at 10k-case scale."""
+    from metrics.language_fidelity import detect_lang
+    assert hasattr(detect_lang, "cache_info"), (
+        "detect_lang must be decorated with @functools.lru_cache — "
+        "langdetect is expensive per call at 10k cases"
+    )
+
+
+def test_detect_lang_caches_repeated_calls():
+    """Same input string should hit the cache on the second call."""
+    from metrics.language_fidelity import detect_lang
+    detect_lang.cache_clear()
+    detect_lang("Привет, как дела?")   # first call — miss
+    detect_lang("Привет, как дела?")   # second call — should be a hit
+    info = detect_lang.cache_info()
+    assert info.hits >= 1
+    assert info.misses >= 1

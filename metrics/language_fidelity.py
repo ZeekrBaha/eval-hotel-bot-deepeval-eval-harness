@@ -10,6 +10,7 @@ lack distinctive Kyrgyz Cyrillic letters (e.g. "Баасы канча?" contains
 no ң/ө/ү). Without this, common Kyrgyz phrases fall through to the Russian
 default, causing test_metric_fails_on_language_mismatch to fail.
 """
+import functools
 import re
 
 from deepeval.metrics import BaseMetric
@@ -51,6 +52,7 @@ _KY_WORDS = {"канча", "канчадан", "баасы", "бармы", "жо
 _MIN_CYRILLIC_FOR_DEFAULT = 4
 
 
+@functools.lru_cache(maxsize=512)
 def detect_lang(text: str) -> str:
     low = text.lower()
     if any(c in _KY_ONLY for c in low):
