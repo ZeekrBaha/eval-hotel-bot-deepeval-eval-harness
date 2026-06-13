@@ -175,8 +175,14 @@ def main() -> None:
     ap.add_argument("--tag", default=None, help="suffix for the output filenames")
     ap.add_argument("--classify-grounding", action="store_true",
                     help="append a rule-based grounding-failure taxonomy to the report")
+    ap.add_argument("--temperature", type=float, default=None,
+                    help="SUT temperature override (default: 1.0 = production). "
+                         "Use 0.0 for reproducible CI runs.")
     args = ap.parse_args()
     _check_env_vars(_LIVE_KEYS)
+
+    if args.temperature is not None:
+        os.environ["SUT_TEMPERATURE"] = str(args.temperature)
 
     report = run(args.source, args.limit, sut_prompt_path=args.sut_prompt,
                  variant=args.variant, classify_grounding=args.classify_grounding)

@@ -113,6 +113,7 @@ def handle_message(platform: str, sender_id: str, message_text: str) -> dict:
         model="gpt-4o-mini",
         max_completion_tokens=400,
         response_format=_RESPONSE_FORMAT,
+        temperature=float(os.environ.get("SUT_TEMPERATURE", "1.0")),
         messages=[
             {"role": "system", "content": system_prompt},
             *history[-CONTEXT_WINDOW:],

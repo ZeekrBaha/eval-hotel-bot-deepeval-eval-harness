@@ -135,3 +135,87 @@ def test_load_system_prompt_reads_file():
     text = load_system_prompt()
     assert "Ала-Тоо" in text
     assert "бассейн" in text
+
+
+def test_sut_temperature_env_var_is_read(monkeypatch):
+    """When SUT_TEMPERATURE=0.0, bot.py passes temperature=0.0 to OpenAI."""
+    import sut.hotel_bot.bot as _bot
+
+    captured: dict = {}
+
+    class _Msg:
+        content = ('{"reply":"ок","is_booking_intent":false,'
+                   '"guest_name":null,"check_in":null,"check_out":null,"num_guests":null}')
+
+    class _Choice:
+        message = _Msg()
+
+    class _Usage:
+        prompt_tokens = 10
+        completion_tokens = 5
+
+    class _Resp:
+        choices = [_Choice()]
+        usage = _Usage()
+
+    class _Completions:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            return _Resp()
+
+    class _Chat:
+        completions = _Completions()
+
+    class _FakeClient:
+        chat = _Chat()
+
+    monkeypatch.setattr(_bot, "_openai_client", _FakeClient())
+    monkeypatch.setenv("SUT_TEMPERATURE", "0.0")
+
+    from sut.bot_runner import BotRunner
+    runner = BotRunner()
+    runner.run([{"role": "user", "content": "есть ли вай-фай?"}])
+
+    assert captured.get("temperature") == pytest.approx(0.0)
+
+
+def test_sut_temperature_defaults_to_one(monkeypatch):
+    """Without SUT_TEMPERATURE, temperature defaults to 1.0 (production default)."""
+    import sut.hotel_bot.bot as _bot
+
+    captured: dict = {}
+
+    class _Msg:
+        content = ('{"reply":"ок","is_booking_intent":false,'
+                   '"guest_name":null,"check_in":null,"check_out":null,"num_guests":null}')
+
+    class _Choice:
+        message = _Msg()
+
+    class _Usage:
+        prompt_tokens = 10
+        completion_tokens = 5
+
+    class _Resp:
+        choices = [_Choice()]
+        usage = _Usage()
+
+    class _Completions:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            return _Resp()
+
+    class _Chat:
+        completions = _Completions()
+
+    class _FakeClient:
+        chat = _Chat()
+
+    monkeypatch.setattr(_bot, "_openai_client", _FakeClient())
+    monkeypatch.delenv("SUT_TEMPERATURE", raising=False)
+
+    from sut.bot_runner import BotRunner
+    runner = BotRunner()
+    runner.run([{"role": "user", "content": "есть ли вай-фай?"}])
+
+    assert captured.get("temperature") == pytest.approx(1.0)
