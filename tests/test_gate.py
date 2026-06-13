@@ -1,5 +1,4 @@
 """Tests for meta.gate — pure CI gating logic."""
-import pytest
 from meta.gate import (
     GROUNDING_BASELINE,
     GROUNDING_TOLERANCE,
@@ -68,6 +67,10 @@ def test_error_rate_fails_above_threshold():
     failures = check_error_rate(errors=11, cases_run=200)
     assert len(failures) == 1
     assert "error rate" in failures[0]
+
+
+def test_error_rate_at_exact_threshold():
+    assert check_error_rate(errors=10, cases_run=200) == []
 
 
 def test_error_rate_safe_on_zero_cases():
