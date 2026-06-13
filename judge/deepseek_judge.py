@@ -5,11 +5,21 @@ vs the gpt-4o-mini SUT, so the judge has no self-preference toward the SUT.
 DeepEval may call generate(prompt) for free-text scoring or generate(prompt, schema)
 for structured scoring (pydantic model). We honor both: with a schema we instruct
 JSON-only and validate into the schema; without, we return raw text.
+
+generate() retries up to 3 times with exponential backoff (1s, 2s) on any exception
+(JSON parse errors, network timeouts, API errors). Persistent failure raises JudgeError
+so the caller can distinguish a judge outage from a bot error.
 """
 import json
 import os
+import random
+import time
 
 from deepeval.models import DeepEvalBaseLLM
+
+
+class JudgeError(Exception):
+    """Raised when the judge fails after all retry attempts."""
 
 
 class DeepSeekJudge(DeepEvalBaseLLM):
@@ -41,11 +51,21 @@ class DeepSeekJudge(DeepEvalBaseLLM):
         return r.choices[0].message.content or ""
 
     def generate(self, prompt: str, schema=None):
-        if schema is None:
-            return self._chat(prompt, json_mode=False)
-        text = self._chat(prompt + "\n\nReturn ONLY valid JSON.", json_mode=True)
-        data = json.loads(text)
-        return schema(**data)  # pydantic model passed by DeepEval
+        last_exc: Exception | None = None
+        for attempt in range(3):
+            try:
+                text = self._chat(
+                    prompt + ("\n\nReturn ONLY valid JSON." if schema else ""),
+                    schema is not None,
+                )
+                if schema is None:
+                    return text
+                return schema(**json.loads(text))
+            except Exception as exc:  # noqa: BLE001
+                last_exc = exc
+                if attempt < 2:
+                    time.sleep(2 ** attempt + random.random())
+        raise JudgeError(f"judge failed after 3 attempts: {last_exc}") from last_exc
 
     async def a_generate(self, prompt: str, schema=None):
         return self.generate(prompt, schema)
