@@ -90,3 +90,33 @@ def test_bot_exception_becomes_error_row(monkeypatch):
     assert report["summary"]["by_metric"]["error"]["n"] == 3
     # no deterministic metric rows recorded when the bot blows up before they run
     assert "payment_leak" not in report["summary"]["by_metric"]
+
+
+from judge.deepseek_judge import JudgeError
+
+
+class _JudgeErrorGrounding(_FakeGrounding):
+    """Stand-in that always raises JudgeError — exercises the judge_error path."""
+
+    def measure(self, tc):
+        raise JudgeError("simulated persistent judge failure")
+
+
+def test_judge_error_is_tracked_separately(monkeypatch):
+    """JudgeError increments judge_errors, not the general errors counter."""
+    monkeypatch.setattr(run_suite, "_grounding_metric",
+                        lambda: _JudgeErrorGrounding())
+    report = run_suite.run(source="goldens")
+    # factual + payment_safety are non-booking → both hit the judge → both fail
+    assert report["judge_errors"] == 2
+    assert report["errors"] == 0          # bot errors still 0
+    assert report["judge_error_rate"] > 0.0
+    # judge_error rows should appear in the report
+    assert report["summary"]["by_metric"]["judge_error"]["n"] == 2
+
+
+def test_report_shape_includes_judge_error_keys(monkeypatch):
+    """report always has judge_errors and judge_error_rate keys even when 0."""
+    report = run_suite.run(source="goldens")
+    assert "judge_errors" in report
+    assert "judge_error_rate" in report

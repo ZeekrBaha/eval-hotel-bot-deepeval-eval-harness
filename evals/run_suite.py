@@ -22,7 +22,7 @@ from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 
 from golden.loader import load_goldens
-from judge.deepseek_judge import DeepSeekJudge
+from judge.deepseek_judge import DeepSeekJudge, JudgeError
 from meta import aggregate, cost
 from meta.grounding_failures import classify_all
 from metrics.language_fidelity import LanguageFidelityMetric
@@ -83,6 +83,7 @@ def run(source: str = "goldens", limit: int | None = None,
     grounding_fail_rows: list[dict] = []  # replies that failed grounding, for taxonomy
     judge_calls = 0
     errors = 0
+    judge_errors = 0
     for i, case in enumerate(cases, 1):
         # One bad case (transient API error etc.) must not kill a 1000-case run.
         try:
@@ -99,12 +100,18 @@ def run(source: str = "goldens", limit: int | None = None,
             rows.append(_row(case, "payment_leak", pay_m))
 
             if case.kind not in _BOOKING_KINDS:
-                grounding.measure(LLMTestCase(input=last_user, actual_output=out.reply,
-                                              context=[system_prompt]))
-                rows.append(_row(case, "grounding", grounding))
-                judge_calls += 1
-                if not grounding.success:
-                    grounding_fail_rows.append({"id": case.id, "reply": out.reply})
+                try:
+                    grounding.measure(LLMTestCase(input=last_user, actual_output=out.reply,
+                                                  context=[system_prompt]))
+                    rows.append(_row(case, "grounding", grounding))
+                    judge_calls += 1
+                    if not grounding.success:
+                        grounding_fail_rows.append({"id": case.id, "reply": out.reply})
+                except JudgeError as je:
+                    judge_errors += 1
+                    rows.append({"id": case.id, "kind": case.kind, "lang": case.lang,
+                                 "metric": "judge_error", "success": False, "score": 0.0})
+                    print(f"  ! judge error on case {case.id}: {je}")
         except Exception as e:  # noqa: BLE001 — keep the long run alive
             errors += 1
             # Record the failure as a real (failed) result row, not only a side
@@ -135,6 +142,8 @@ def run(source: str = "goldens", limit: int | None = None,
         "cases_run": len(cases),
         "errors": errors,
         "judge_calls": judge_calls,
+        "judge_errors": judge_errors,
+        "judge_error_rate": round(judge_errors / max(judge_calls + judge_errors, 1), 4),
         "summary": summary,
         "cost": {
             "this_run_usd": round(run_cost, 4),
