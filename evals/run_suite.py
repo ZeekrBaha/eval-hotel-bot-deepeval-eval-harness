@@ -16,6 +16,7 @@ projected cost of the full dataset so you can decide before spending.
 """
 import argparse
 import json
+import os
 from pathlib import Path
 
 from deepeval.metrics import GEval
@@ -37,6 +38,18 @@ _SOURCES = {
     "synth10k": "data/goldens_synth_10k.jsonl",
 }
 _BOOKING_KINDS = {"booking_complete", "booking_incomplete"}
+_LIVE_KEYS = ["OPENAI_API_KEY", "DEEPSEEK_API_KEY"]
+
+
+def _check_env_vars(required: list[str]) -> None:
+    """Fail fast if any required environment variables are missing."""
+    import sys
+    missing = [k for k in required if not os.environ.get(k)]
+    if missing:
+        sys.exit(
+            f"[run_suite] Missing required env vars: {', '.join(missing)}\n"
+            f"Copy .env.example → .env and fill in the values."
+        )
 
 
 def _grounding_metric() -> GEval:
@@ -73,7 +86,6 @@ def run(source: str = "goldens", limit: int | None = None,
     # be pointed at a different (e.g. weakened) prompt for regression A/B.
     system_prompt = load_system_prompt()
     if sut_prompt_path is not None:
-        import os
         os.environ["SYSTEM_PROMPT_PATH"] = sut_prompt_path
         bot.get_system_prompt.cache_clear()
     runner = BotRunner(variant=variant)
@@ -164,6 +176,7 @@ def main() -> None:
     ap.add_argument("--classify-grounding", action="store_true",
                     help="append a rule-based grounding-failure taxonomy to the report")
     args = ap.parse_args()
+    _check_env_vars(_LIVE_KEYS)
 
     report = run(args.source, args.limit, sut_prompt_path=args.sut_prompt,
                  variant=args.variant, classify_grounding=args.classify_grounding)

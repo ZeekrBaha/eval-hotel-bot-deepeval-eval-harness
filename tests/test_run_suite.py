@@ -120,3 +120,20 @@ def test_report_shape_includes_judge_error_keys(monkeypatch):
     report = run_suite.run(source="goldens")
     assert "judge_errors" in report
     assert "judge_error_rate" in report
+
+
+def test_check_env_vars_exits_on_missing_key(monkeypatch):
+    """_check_env_vars() calls sys.exit when a required key is absent."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    with pytest.raises(SystemExit) as exc_info:
+        run_suite._check_env_vars(["OPENAI_API_KEY", "DEEPSEEK_API_KEY"])
+    assert "OPENAI_API_KEY" in str(exc_info.value)
+    assert "DEEPSEEK_API_KEY" in str(exc_info.value)
+
+
+def test_check_env_vars_passes_when_all_present(monkeypatch):
+    """_check_env_vars() does nothing when all keys are set."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "dk-test")
+    run_suite._check_env_vars(["OPENAI_API_KEY", "DEEPSEEK_API_KEY"])  # must not raise
