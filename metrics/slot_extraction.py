@@ -3,6 +3,7 @@
 golden's expected slots (only the keys the golden specifies). Score = fraction
 of expected slots correct; success requires all of them.
 """
+
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 

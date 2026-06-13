@@ -7,6 +7,7 @@ from meta.cost import cost_for, estimate_case_cost, estimate_suite_cost
 # cost_for
 # ---------------------------------------------------------------------------
 
+
 def test_cost_for_gpt4o_mini_known_value():
     # 700 input @ 0.15/1M + 80 output @ 0.60/1M
     expected = 700 * 0.15 / 1_000_000 + 80 * 0.60 / 1_000_000
@@ -31,6 +32,7 @@ def test_cost_for_unknown_model_raises():
 # ---------------------------------------------------------------------------
 # estimate_case_cost
 # ---------------------------------------------------------------------------
+
 
 def test_case_cost_total_equals_sut_plus_judge():
     result = estimate_case_cost()
@@ -63,6 +65,7 @@ def test_case_cost_sut_matches_cost_for():
 # ---------------------------------------------------------------------------
 # estimate_suite_cost
 # ---------------------------------------------------------------------------
+
 
 def test_suite_cost_total_equals_n_cases_times_per_case():
     result = estimate_suite_cost(1000)

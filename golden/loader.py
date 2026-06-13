@@ -1,5 +1,6 @@
 # golden/loader.py
 """Load hand-labeled golden cases from data/goldens.jsonl."""
+
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +25,13 @@ def load_goldens(path: Path | None = None) -> list[Golden]:
         if not line:
             continue
         d = json.loads(line)
-        out.append(Golden(id=d["id"], kind=d["kind"], lang=d["lang"],
-                          messages=d["messages"], expected=d["expected"]))
+        out.append(
+            Golden(
+                id=d["id"],
+                kind=d["kind"],
+                lang=d["lang"],
+                messages=d["messages"],
+                expected=d["expected"],
+            )
+        )
     return out

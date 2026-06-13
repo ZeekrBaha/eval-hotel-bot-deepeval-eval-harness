@@ -29,16 +29,19 @@ def _grounding_metric():
             "service is unavailable when it is in the 'Чего нет' list. FAIL if it invents "
             "any fact, or defers when the answer was present. Ignore reply length."
         ),
-        evaluation_params=[SingleTurnParams.INPUT,
-                           SingleTurnParams.ACTUAL_OUTPUT,
-                           SingleTurnParams.CONTEXT],
+        evaluation_params=[
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.CONTEXT,
+        ],
         model=DeepSeekJudge(),
         threshold=0.7,
     )
 
 
-@pytest.mark.parametrize("golden", [g for g in load_goldens() if g.kind in _FACTUAL_KINDS],
-                         ids=lambda g: g.id)
+@pytest.mark.parametrize(
+    "golden", [g for g in load_goldens() if g.kind in _FACTUAL_KINDS], ids=lambda g: g.id
+)
 def test_factual(golden):
     out = BotRunner(variant=sut_variant()).run(golden.messages)
     tc = LLMTestCase(

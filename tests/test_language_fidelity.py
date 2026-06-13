@@ -50,6 +50,7 @@ def test_metric_passes_when_query_language_unknown():
 
 # --- hardening: short ambiguous Cyrillic + expanded Kyrgyz word list ---
 
+
 def test_very_short_ambiguous_cyrillic_is_unknown():
     # 2 Cyrillic letters, no KY/RU-distinctive signal -> undecidable, not defaulted RU
     assert detect_lang("ок") == "unknown"
@@ -87,6 +88,7 @@ def test_short_ambiguous_query_does_not_force_false_match():
 
 # --- langdetect fallback: signal-less Cyrillic no longer silently defaults RU ---
 
+
 def test_signal_less_kyrgyz_not_misclassified_as_russian():
     # No ң/ө/ү, not in the wordlist; this previously hit the bare "default to ru"
     # branch. The langdetect fallback must NOT assert Russian (it returns a non-ru
@@ -107,6 +109,7 @@ def test_distinctive_kyrgyz_fast_path_unchanged():
 def test_detect_lang_has_lru_cache():
     """detect_lang should be wrapped with lru_cache for performance at 10k-case scale."""
     from metrics.language_fidelity import detect_lang
+
     assert hasattr(detect_lang, "cache_info"), (
         "detect_lang must be decorated with @functools.lru_cache — "
         "langdetect is expensive per call at 10k cases"
@@ -116,9 +119,10 @@ def test_detect_lang_has_lru_cache():
 def test_detect_lang_caches_repeated_calls():
     """Same input string should hit the cache on the second call."""
     from metrics.language_fidelity import detect_lang
+
     detect_lang.cache_clear()
-    detect_lang("Привет, как дела?")   # first call — miss
-    detect_lang("Привет, как дела?")   # second call — should be a hit
+    detect_lang("Привет, как дела?")  # first call — miss
+    detect_lang("Привет, как дела?")  # second call — should be a hit
     info = detect_lang.cache_info()
     assert info.hits >= 1
     assert info.misses >= 1

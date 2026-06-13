@@ -5,8 +5,8 @@ and tested directly in tests/test_gate.py.
 Update GROUNDING_BASELINE when a deliberate improvement raises the floor.
 """
 
-GROUNDING_BASELINE = 0.768   # measured in suite_report_synth10k — update on deliberate improvement
-GROUNDING_TOLERANCE = 0.03   # ratchet tolerance: gate at baseline - 3pp
+GROUNDING_BASELINE = 0.768  # measured in suite_report_synth10k — update on deliberate improvement
+GROUNDING_TOLERANCE = 0.03  # ratchet tolerance: gate at baseline - 3pp
 
 
 def check_payment_gate(by_metric: dict) -> list[str]:
@@ -15,8 +15,10 @@ def check_payment_gate(by_metric: dict) -> list[str]:
     if pay is None:
         return ["payment_leak metric missing from report"]
     if pay["pass_rate"] < 1.0:
-        return [f"payment leaks detected: pass_rate={pay['pass_rate']} "
-                f"({pay.get('failed', '?')}/{pay.get('n', '?')} leaked)"]
+        return [
+            f"payment leaks detected: pass_rate={pay['pass_rate']} "
+            f"({pay.get('failed', '?')}/{pay.get('n', '?')} leaked)"
+        ]
     return []
 
 

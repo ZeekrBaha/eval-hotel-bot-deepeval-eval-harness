@@ -24,8 +24,13 @@ from openai import OpenAI
 from sut.hotel_bot import db
 
 BOOKING_KEYWORDS = [
-    "забронировать", "бронь", "свободен", "хочу номер",
-    "book", "reserve", "бронирование",
+    "забронировать",
+    "бронь",
+    "свободен",
+    "хочу номер",
+    "book",
+    "reserve",
+    "бронирование",
 ]
 CONTEXT_WINDOW = 10
 DAILY_MESSAGE_LIMIT = 50
@@ -52,8 +57,12 @@ _RESPONSE_FORMAT = {
                 "num_guests": _nullable_int,
             },
             "required": [
-                "reply", "is_booking_intent",
-                "guest_name", "check_in", "check_out", "num_guests",
+                "reply",
+                "is_booking_intent",
+                "guest_name",
+                "check_in",
+                "check_out",
+                "num_guests",
             ],
             "additionalProperties": False,
         },
@@ -80,7 +89,11 @@ def get_system_prompt() -> str:
 
 
 def _today() -> str:
-    return datetime.datetime.now(ZoneInfo(os.environ.get("HOTEL_TZ", "Asia/Bishkek"))).date().strftime("%d.%m.%Y")
+    return (
+        datetime.datetime.now(ZoneInfo(os.environ.get("HOTEL_TZ", "Asia/Bishkek")))
+        .date()
+        .strftime("%d.%m.%Y")
+    )
 
 
 def is_booking_intent(message_text: str) -> bool:
@@ -95,7 +108,12 @@ def _null_booking() -> dict:
 def handle_message(platform: str, sender_id: str, message_text: str) -> dict:
     daily_count = db.increment_daily_counter(platform, sender_id)
     if daily_count > DAILY_MESSAGE_LIMIT:
-        _logger.warning("daily_limit_exceeded platform=%s sender=%s count=%d", platform, sender_id[:4] + "****", daily_count)
+        _logger.warning(
+            "daily_limit_exceeded platform=%s sender=%s count=%d",
+            platform,
+            sender_id[:4] + "****",
+            daily_count,
+        )
         return {
             "reply": ESCALATION_REPLY,
             "is_booking_intent": False,
@@ -141,10 +159,14 @@ def handle_message(platform: str, sender_id: str, message_text: str) -> dict:
     else:
         booking_intent = is_booking_intent(message_text)
 
-    db.append_conversation_turn(platform, sender_id, [
-        {"role": "user", "content": message_text},
-        {"role": "assistant", "content": reply},
-    ])
+    db.append_conversation_turn(
+        platform,
+        sender_id,
+        [
+            {"role": "user", "content": message_text},
+            {"role": "assistant", "content": reply},
+        ],
+    )
 
     return {
         "reply": reply,

@@ -7,9 +7,9 @@ dependencies = [
     # deepeval 4.x pulls httpx>=0.28; openai>=1.55.3 is required so the OpenAI client
     # does not pass the removed `proxies` kwarg into httpx 0.28 (TypeError otherwise).
     "deepeval==4.0.5",
-    "langdetect>=1.0.9",
+    "langdetect==1.0.9",
     "openai==2.41.0",
-    "python-dotenv>=1.1.1",
+    "python-dotenv==1.1.1",
 ]
 
 [dependency-groups]

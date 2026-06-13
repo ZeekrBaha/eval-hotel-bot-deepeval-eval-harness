@@ -1,4 +1,5 @@
 """Tests for meta.gate — pure CI gating logic."""
+
 from meta.gate import (
     GROUNDING_BASELINE,
     GROUNDING_TOLERANCE,
@@ -9,6 +10,7 @@ from meta.gate import (
 
 
 # --- payment gate ---
+
 
 def test_payment_gate_passes_on_perfect_score():
     by_metric = {"payment_leak": {"pass_rate": 1.0, "n": 200, "failed": 0}}
@@ -27,6 +29,7 @@ def test_payment_gate_fails_on_missing_metric():
 
 
 # --- grounding gate ---
+
 
 def test_grounding_gate_passes_at_baseline():
     by_metric = {"grounding": {"pass_rate": GROUNDING_BASELINE, "ci_low": 0.74, "ci_high": 0.80}}
@@ -58,6 +61,7 @@ def test_grounding_gate_custom_baseline():
 
 
 # --- error rate gate ---
+
 
 def test_error_rate_passes_below_threshold():
     assert check_error_rate(errors=9, cases_run=200) == []

@@ -9,6 +9,7 @@ you'd gate a prompt change in CI: block the merge if pass_rate drops.
 
     python -m evals.regression_check --limit 12
 """
+
 import argparse
 import json
 from pathlib import Path
@@ -30,7 +31,9 @@ def compare_pass_rates(good: dict, regr: dict) -> dict:
         rv = regr.get("by_metric", {}).get(m, {}).get("pass_rate", 0.0)
         per_metric[m] = {"good": gv, "regr": rv, "delta": round(rv - gv, 3)}
     return {
-        "good": g, "regr": r, "delta": round(r - g, 3),
+        "good": g,
+        "regr": r,
+        "delta": round(r - g, 3),
         "regressed": r < g,
         "by_metric": per_metric,
     }
@@ -38,6 +41,7 @@ def compare_pass_rates(good: dict, regr: dict) -> dict:
 
 def _run(limit: int):  # pragma: no cover (needs keys + network)
     from evals.run_suite import run
+
     good = run("goldens", limit=limit, sut_prompt_path=_GOOD)["summary"]
     regr = run("goldens", limit=limit, sut_prompt_path=_WEAK)["summary"]
     return good, regr
@@ -57,8 +61,11 @@ def main():  # pragma: no cover
         json.dump(out, f, ensure_ascii=False, indent=2)
 
     print(json.dumps(verdict, ensure_ascii=False, indent=2))
-    print("REGRESSION DETECTED" if verdict["regressed"]
-          else "no regression (weak prompt did not score lower this run)")
+    print(
+        "REGRESSION DETECTED"
+        if verdict["regressed"]
+        else "no regression (weak prompt did not score lower this run)"
+    )
 
 
 if __name__ == "__main__":

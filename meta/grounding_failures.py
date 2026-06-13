@@ -15,6 +15,7 @@ right fix:
 Order matters: a wrong price is checked first so it is not masked by a stray defer
 phrase that may also appear in the reply.
 """
+
 from __future__ import annotations
 
 import re
@@ -24,8 +25,15 @@ _PRICE = re.compile(r"\b(\d{3,6})\b")  # som room prices are 3-6 digit runs
 
 # Greeting / politeness filler that must not count as a confabulated fact.
 _FILLER = {
-    "здравствуйте", "помочь", "пожалуйста", "добрый", "спасибо",
-    "рахмат", "конечно", "минуту", "момент",
+    "здравствуйте",
+    "помочь",
+    "пожалуйста",
+    "добрый",
+    "спасибо",
+    "рахмат",
+    "конечно",
+    "минуту",
+    "момент",
 }
 
 

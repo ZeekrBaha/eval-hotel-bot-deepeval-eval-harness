@@ -1,5 +1,5 @@
 """Tests for judge retry/backoff and JudgeError exception."""
-import json
+
 import pytest
 from pydantic import BaseModel
 
@@ -68,4 +68,5 @@ def test_generate_no_retry_for_plain_text(monkeypatch):
 
 def test_judge_error_is_importable():
     from judge.deepseek_judge import JudgeError  # noqa: F401
+
     assert issubclass(JudgeError, Exception)

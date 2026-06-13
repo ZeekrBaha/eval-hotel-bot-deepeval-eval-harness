@@ -4,6 +4,7 @@ The vendored bot calls a module-level OpenAI client; we replace it with a fake t
 returns canned JSON. The in-memory db needs no mocking, so history seeding and the
 CONTEXT_WINDOW truncation are exercised against the real bot code.
 """
+
 import json
 from pathlib import Path
 
@@ -16,8 +17,14 @@ _DATA = Path(__file__).resolve().parent.parent / "data" / "system_prompt.txt"
 
 
 def _payload(**kw):
-    base = {"reply": "ok", "is_booking_intent": False, "guest_name": None,
-            "check_in": None, "check_out": None, "num_guests": None}
+    base = {
+        "reply": "ok",
+        "is_booking_intent": False,
+        "guest_name": None,
+        "check_in": None,
+        "check_out": None,
+        "num_guests": None,
+    }
     base.update(kw)
     return json.dumps(base)
 
@@ -73,8 +80,18 @@ def test_run_parses_structured_output():
 
 
 def test_run_extracts_booking_slots():
-    _use([_payload(reply="Спасибо!", is_booking_intent=True, guest_name="Айгуль",
-                   check_in="2026-06-20", check_out="2026-06-25", num_guests=2)])
+    _use(
+        [
+            _payload(
+                reply="Спасибо!",
+                is_booking_intent=True,
+                guest_name="Айгуль",
+                check_in="2026-06-20",
+                check_out="2026-06-25",
+                num_guests=2,
+            )
+        ]
+    )
     out = BotRunner().run([{"role": "user", "content": "бронь"}])
     assert out.guest_name == "Айгуль"
     assert out.num_guests == 2
@@ -132,6 +149,7 @@ def test_baseline_variant_injects_no_directive():
 
 def test_load_system_prompt_reads_file():
     from sut.prompt import load_system_prompt
+
     text = load_system_prompt()
     assert "Ала-Тоо" in text
     assert "бассейн" in text
@@ -144,8 +162,10 @@ def test_sut_temperature_env_var_is_read(monkeypatch):
     captured: dict = {}
 
     class _Msg:
-        content = ('{"reply":"ок","is_booking_intent":false,'
-                   '"guest_name":null,"check_in":null,"check_out":null,"num_guests":null}')
+        content = (
+            '{"reply":"ок","is_booking_intent":false,'
+            '"guest_name":null,"check_in":null,"check_out":null,"num_guests":null}'
+        )
 
     class _Choice:
         message = _Msg()
@@ -173,6 +193,7 @@ def test_sut_temperature_env_var_is_read(monkeypatch):
     monkeypatch.setenv("SUT_TEMPERATURE", "0.0")
 
     from sut.bot_runner import BotRunner
+
     runner = BotRunner()
     runner.run([{"role": "user", "content": "есть ли вай-фай?"}])
 
@@ -186,8 +207,10 @@ def test_sut_temperature_defaults_to_one(monkeypatch):
     captured: dict = {}
 
     class _Msg:
-        content = ('{"reply":"ок","is_booking_intent":false,'
-                   '"guest_name":null,"check_in":null,"check_out":null,"num_guests":null}')
+        content = (
+            '{"reply":"ок","is_booking_intent":false,'
+            '"guest_name":null,"check_in":null,"check_out":null,"num_guests":null}'
+        )
 
     class _Choice:
         message = _Msg()
@@ -215,6 +238,7 @@ def test_sut_temperature_defaults_to_one(monkeypatch):
     monkeypatch.delenv("SUT_TEMPERATURE", raising=False)
 
     from sut.bot_runner import BotRunner
+
     runner = BotRunner()
     runner.run([{"role": "user", "content": "есть ли вай-фай?"}])
 

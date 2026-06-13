@@ -16,11 +16,13 @@ def cases_1000():
 
 # ── count ────────────────────────────────────────────────────────────────────
 
+
 def test_returns_exactly_n(cases_1000):
     assert len(cases_1000) == 1000
 
 
 # ── ids ──────────────────────────────────────────────────────────────────────
+
 
 def test_all_ids_unique(cases_1000):
     ids = [c["id"] for c in cases_1000]
@@ -28,6 +30,7 @@ def test_all_ids_unique(cases_1000):
 
 
 # ── kinds + languages ────────────────────────────────────────────────────────
+
 
 def test_all_kinds_present(cases_1000):
     found = {c["kind"] for c in cases_1000}
@@ -45,6 +48,7 @@ def test_both_languages_present(cases_1000):
 
 
 # ── schema ───────────────────────────────────────────────────────────────────
+
 
 def test_required_top_level_keys(cases_1000):
     required = {"id", "kind", "lang", "messages", "expected"}
@@ -70,34 +74,31 @@ def test_each_message_has_role_and_content(cases_1000):
 def test_message_roles_valid(cases_1000):
     for c in cases_1000:
         for msg in c["messages"]:
-            assert msg["role"] in ALLOWED_ROLES, (
-                f"unexpected role '{msg['role']}' in {c['id']}"
-            )
+            assert msg["role"] in ALLOWED_ROLES, f"unexpected role '{msg['role']}' in {c['id']}"
 
 
 def test_last_message_role_is_user(cases_1000):
     for c in cases_1000:
-        assert c["messages"][-1]["role"] == "user", (
-            f"last message is not user in {c['id']}"
-        )
+        assert c["messages"][-1]["role"] == "user", f"last message is not user in {c['id']}"
 
 
 def test_expected_has_source_synthetic(cases_1000):
     for c in cases_1000:
-        assert c["expected"].get("source") == "synthetic", (
-            f"expected.source != 'synthetic' in {c['id']}"
-        )
+        assert (
+            c["expected"].get("source") == "synthetic"
+        ), f"expected.source != 'synthetic' in {c['id']}"
 
 
 def test_expected_no_human_pass(cases_1000):
     """Synthetic cases must not have human_pass — they are judged, not scored for kappa."""
     for c in cases_1000:
-        assert "human_pass" not in c["expected"], (
-            f"unexpected human_pass in synthetic case {c['id']}"
-        )
+        assert (
+            "human_pass" not in c["expected"]
+        ), f"unexpected human_pass in synthetic case {c['id']}"
 
 
 # ── determinism ──────────────────────────────────────────────────────────────
+
 
 def test_deterministic_seed():
     a = generate_cases(50, seed=0)
@@ -107,9 +108,11 @@ def test_deterministic_seed():
 
 # ── spread ───────────────────────────────────────────────────────────────────
 
+
 def test_reasonable_kind_spread(cases_1000):
     """Each kind should appear at least 50 times out of 1000."""
     from collections import Counter
+
     counts = Counter(c["kind"] for c in cases_1000)
     for kind in ALLOWED_KINDS:
         assert counts[kind] >= 50, f"kind '{kind}' only appears {counts[kind]} times"
@@ -118,6 +121,7 @@ def test_reasonable_kind_spread(cases_1000):
 def test_reasonable_lang_spread(cases_1000):
     """Each lang should appear at least 300 times out of 1000."""
     from collections import Counter
+
     counts = Counter(c["lang"] for c in cases_1000)
     for lang in ALLOWED_LANGS:
         assert counts[lang] >= 300, f"lang '{lang}' only appears {counts[lang]} times"

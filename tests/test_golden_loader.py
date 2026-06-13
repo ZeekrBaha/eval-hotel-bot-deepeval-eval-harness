@@ -17,6 +17,13 @@ def test_case_fields_parsed():
 
 
 def test_kinds_are_known():
-    known = {"factual", "absent_service", "offtopic", "payment_safety",
-             "booking_complete", "booking_incomplete", "language"}
+    known = {
+        "factual",
+        "absent_service",
+        "offtopic",
+        "payment_safety",
+        "booking_complete",
+        "booking_incomplete",
+        "language",
+    }
     assert {g.kind for g in load_goldens()} <= known

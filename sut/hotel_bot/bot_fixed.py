@@ -15,31 +15,41 @@ Only `handle_message` differs from `sut.hotel_bot.bot`; every constant, the sche
 the client, the db, and the parsing/fallback logic are reused from it, so the diff IS
 the fix and nothing else.
 """
+
 import json
 import time
 
 from metrics.language_fidelity import detect_lang
 from sut.hotel_bot import db
 from sut.hotel_bot.bot import (
-    CONTEXT_WINDOW, DAILY_MESSAGE_LIMIT, ESCALATION_REPLY, _RESPONSE_FORMAT,
-    _get_openai_client, _logger, _null_booking, _today, get_system_prompt,
+    CONTEXT_WINDOW,
+    DAILY_MESSAGE_LIMIT,
+    ESCALATION_REPLY,
+    _RESPONSE_FORMAT,
+    _get_openai_client,
+    _logger,
+    _null_booking,
+    _today,
+    get_system_prompt,
     is_booking_intent,
 )
 
 _LANG_DIRECTIVE = {
-    "ky": ("\n\nВНИМАНИЕ: гость пишет на КЫРГЫЗСКОМ языке. Ответь ТОЛЬКО на кыргызском "
-           "— включая цены, адрес и любые данные отеля. Не используй русский."),
+    "ky": (
+        "\n\nВНИМАНИЕ: гость пишет на КЫРГЫЗСКОМ языке. Ответь ТОЛЬКО на кыргызском "
+        "— включая цены, адрес и любые данные отеля. Не используй русский."
+    ),
     "ru": ("\n\nВНИМАНИЕ: гость пишет на РУССКОМ языке. Ответь ТОЛЬКО на русском."),
 }
 
 # Always-on grounding guard: only services explicitly in the "Чего нет" list may be
 # called unavailable; anything not mentioned at all must be deferred, never denied.
 _GROUNDING_DIRECTIVE = (
-    "\n\nВНИМАНИЕ ПО ГРАУНДИНГУ: говори \"у нас нет\" ТОЛЬКО про услуги из списка "
-    "\"Чего нет\" (бассейн, ресторан). Если про услугу нигде не сказано (например "
-    "спа, трансфер, сауна, бар) — НЕ утверждай, что её нет. Ответь: \"Уточню у "
-    "администратора и вернусь к вам\" (по-кыргызски: \"Администраторго сурап, кайра "
-    "кабарлайм\")."
+    '\n\nВНИМАНИЕ ПО ГРАУНДИНГУ: говори "у нас нет" ТОЛЬКО про услуги из списка '
+    '"Чего нет" (бассейн, ресторан). Если про услугу нигде не сказано (например '
+    'спа, трансфер, сауна, бар) — НЕ утверждай, что её нет. Ответь: "Уточню у '
+    'администратора и вернусь к вам" (по-кыргызски: "Администраторго сурап, кайра '
+    'кабарлайм").'
 )
 
 
@@ -52,7 +62,12 @@ def _language_directive(message_text: str) -> str:
 def handle_message(platform: str, sender_id: str, message_text: str) -> dict:
     daily_count = db.increment_daily_counter(platform, sender_id)
     if daily_count > DAILY_MESSAGE_LIMIT:
-        _logger.warning("daily_limit_exceeded platform=%s sender=%s count=%d", platform, sender_id[:4] + "****", daily_count)
+        _logger.warning(
+            "daily_limit_exceeded platform=%s sender=%s count=%d",
+            platform,
+            sender_id[:4] + "****",
+            daily_count,
+        )
         return {
             "reply": ESCALATION_REPLY,
             "is_booking_intent": False,
@@ -66,8 +81,10 @@ def handle_message(platform: str, sender_id: str, message_text: str) -> dict:
     client = _get_openai_client()
     t0 = time.monotonic()
     # THE FIX: append a code-detected language directive + the grounding guard.
-    system_prompt = (f"Сегодня: {_today()}\n\n{get_system_prompt()}"
-                     f"{_language_directive(message_text)}{_GROUNDING_DIRECTIVE}")
+    system_prompt = (
+        f"Сегодня: {_today()}\n\n{get_system_prompt()}"
+        f"{_language_directive(message_text)}{_GROUNDING_DIRECTIVE}"
+    )
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         max_completion_tokens=400,
@@ -99,10 +116,14 @@ def handle_message(platform: str, sender_id: str, message_text: str) -> dict:
     else:
         booking_intent = is_booking_intent(message_text)
 
-    db.append_conversation_turn(platform, sender_id, [
-        {"role": "user", "content": message_text},
-        {"role": "assistant", "content": reply},
-    ])
+    db.append_conversation_turn(
+        platform,
+        sender_id,
+        [
+            {"role": "user", "content": message_text},
+            {"role": "assistant", "content": reply},
+        ],
+    )
 
     return {
         "reply": reply,

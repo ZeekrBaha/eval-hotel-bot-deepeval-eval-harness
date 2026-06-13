@@ -10,6 +10,7 @@ generate() retries up to 3 times with exponential backoff (1–2s, 2–3s jitter
 (JSON parse errors, network timeouts, API errors). Persistent failure raises JudgeError
 so the caller can distinguish a judge outage from a bot error.
 """
+
 import json
 import os
 import random
@@ -23,28 +24,33 @@ class JudgeError(Exception):
 
 
 class DeepSeekJudge(DeepEvalBaseLLM):
-    def __init__(self, model: str | None = None, api_key: str | None = None,
-                 base_url: str | None = None):
+    def __init__(
+        self, model: str | None = None, api_key: str | None = None, base_url: str | None = None
+    ):
         # DeepEvalBaseLLM declares `model` as the loaded client object; here it is
         # the model *name* string (the client lives in self._client), hence the ignore.
         default_model = os.environ.get("DEEPSEEK_JUDGE_MODEL", "deepseek-chat")
         self.model = model or default_model  # type: ignore[assignment]
         self._api_key = api_key or os.environ.get("DEEPSEEK_API_KEY", "")
-        self._base_url = base_url or os.environ.get("DEEPSEEK_BASE_URL",
-                                                    "https://api.deepseek.com")
+        self._base_url = base_url or os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
         self._client = None
 
     def load_model(self):
         if self._client is None:
             from openai import OpenAI
-            self._client = OpenAI(api_key=self._api_key, base_url=self._base_url,
-                                  timeout=30.0, max_retries=2)
+
+            self._client = OpenAI(
+                api_key=self._api_key, base_url=self._base_url, timeout=30.0, max_retries=2
+            )
         return self._client
 
     def _chat(self, prompt: str, json_mode: bool) -> str:
         client = self.load_model()
-        kwargs = {"model": self.model, "temperature": 0,
-                  "messages": [{"role": "user", "content": prompt}]}
+        kwargs = {
+            "model": self.model,
+            "temperature": 0,
+            "messages": [{"role": "user", "content": prompt}],
+        }
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
         r = client.chat.completions.create(**kwargs)
@@ -64,7 +70,7 @@ class DeepSeekJudge(DeepEvalBaseLLM):
             except Exception as exc:  # noqa: BLE001
                 last_exc = exc
                 if attempt < 2:
-                    time.sleep(2 ** attempt + random.random())
+                    time.sleep(2**attempt + random.random())
         raise JudgeError(f"judge failed after 3 attempts: {last_exc}") from last_exc
 
     async def a_generate(self, prompt: str, schema=None):

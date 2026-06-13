@@ -23,7 +23,9 @@ def estimate_case_cost(
     """Estimated USD for ONE evaluated case: one SUT call + `judged_metrics` judge calls.
     Returns {'sut': float, 'judge': float, 'total': float}. Deterministic metrics cost 0."""
     sut_cost = cost_for(sut_model, sut_in, sut_out)
-    judge_cost = judged_metrics * cost_for(judge_model, judge_in, judge_out) if judged_metrics > 0 else 0.0
+    judge_cost = (
+        judged_metrics * cost_for(judge_model, judge_in, judge_out) if judged_metrics > 0 else 0.0
+    )
     return {
         "sut": sut_cost,
         "judge": judge_cost,

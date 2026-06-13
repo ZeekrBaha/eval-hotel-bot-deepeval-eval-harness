@@ -3,6 +3,7 @@ dataclass the harness maps it into. The two declare the same field set in two
 places (bot._RESPONSE_FORMAT and bot_runner.BotOutput); this test fails loudly if
 either side gains or loses a field.
 """
+
 from typing import Any, cast
 
 from sut.bot_runner import BotOutput

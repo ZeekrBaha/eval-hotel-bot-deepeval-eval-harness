@@ -20,6 +20,7 @@ _booking_keys: dict[tuple[str, str], str] = {}
 
 # --- eval-only helpers (not part of the production interface) -----------------
 
+
 def reset() -> None:
     """Clear all in-memory state. Call before scripting a fresh conversation."""
     _history.clear()
@@ -35,6 +36,7 @@ def set_history(platform: str, sender_id: str, messages: list[dict]) -> None:
 
 # --- production interface (in-memory implementation) --------------------------
 
+
 def get_history(platform: str, sender_id: str) -> list[dict]:
     return list(_history.get((platform, sender_id), []))
 
@@ -45,8 +47,7 @@ def increment_daily_counter(platform: str, sender_id: str) -> int:
     return _counts[key]
 
 
-def append_conversation_turn(platform: str, sender_id: str,
-                             messages: dict | list[dict]) -> None:
+def append_conversation_turn(platform: str, sender_id: str, messages: dict | list[dict]) -> None:
     messages_list = messages if isinstance(messages, list) else [messages]
     key = (platform, sender_id)
     _history.setdefault(key, [])

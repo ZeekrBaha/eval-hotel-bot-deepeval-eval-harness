@@ -86,7 +86,13 @@ def summarize(results: list[dict]) -> dict:
         }
 
     failures = [
-        {"id": r["id"], "kind": r["kind"], "lang": r["lang"], "metric": r["metric"], "score": r["score"]}
+        {
+            "id": r["id"],
+            "kind": r["kind"],
+            "lang": r["lang"],
+            "metric": r["metric"],
+            "score": r["score"],
+        }
         for r in results
         if not r["success"]
     ]
@@ -143,8 +149,7 @@ def to_markdown(summary: dict, title: str = "Suite Report") -> str:
 
     _render_table("By Kind", summary["by_kind"], extra_cols=["ci_low", "ci_high"])
     _render_table("By Language", summary["by_lang"], extra_cols=["ci_low", "ci_high"])
-    _render_table("By Metric", summary["by_metric"],
-                  extra_cols=["ci_low", "ci_high", "avg_score"])
+    _render_table("By Metric", summary["by_metric"], extra_cols=["ci_low", "ci_high", "avg_score"])
 
     # Failures list
     lines.append("## Failures")

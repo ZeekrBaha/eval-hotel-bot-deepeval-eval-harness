@@ -19,8 +19,8 @@ def test_all_same_label_returns_one():
 
 def test_confusion_matrix_counts():
     tp, tn, fp, fn = confusion_matrix(
-        human=[True, True, False, False],
-        judge=[True, False, False, True])
+        human=[True, True, False, False], judge=[True, False, False, True]
+    )
     assert (tp, tn, fp, fn) == (1, 1, 1, 1)
 
 

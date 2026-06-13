@@ -3,6 +3,7 @@
 The vendored bot reads this file itself via SYSTEM_PROMPT_PATH; this helper exists
 so the evals can pass the same prompt to the judge as `context`.
 """
+
 from pathlib import Path
 
 _PROMPT_PATH = Path(__file__).resolve().parent.parent / "data" / "system_prompt.txt"

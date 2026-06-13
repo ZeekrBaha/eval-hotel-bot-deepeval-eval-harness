@@ -10,6 +10,7 @@ lack distinctive Kyrgyz Cyrillic letters (e.g. "Баасы канча?" contains
 no ң/ө/ү). Without this, common Kyrgyz phrases fall through to the Russian
 default, causing test_metric_fails_on_language_mismatch to fail.
 """
+
 import functools
 import re
 
@@ -19,7 +20,7 @@ from langdetect import detect as _ld_detect, DetectorFactory, LangDetectExceptio
 
 DetectorFactory.seed = 0  # make langdetect deterministic / reproducible
 
-_KY_ONLY = set("ңөү")          # Kyrgyz Cyrillic letters not used in Russian
+_KY_ONLY = set("ңөү")  # Kyrgyz Cyrillic letters not used in Russian
 # NOTE: 'ы' is NOT here — it is common in Kyrgyz too (e.g. "дарегибиз", "баасы"), so
 # using it as a Russian signal misclassifies Kyrgyz replies. Keep only ru-distinctive
 # letters that are genuinely rare/absent in Kyrgyz.
@@ -30,21 +31,43 @@ def _cyrillic(c: str) -> bool:
     return "Ѐ" <= c <= "ӿ"
 
 
-
 # Common Kyrgyz words that don't appear in Russian; used as secondary signal
 # when distinctive letters are absent. Kept to KY-distinct tokens so a Russian
 # sentence can't accidentally contain one (ambiguous shared words are excluded).
-_KY_WORDS = {"канча", "канчадан", "баасы", "бармы", "жок", "рахмат",
-             "кечиресиз", "атыңыз", "атым", "брондоо", "бронь", "дарегиңер",
-             "саламатсызбы", "кандай", "качан", "ооба", "макул", "керекпи",
-             "болобу", "саламатчылык",
-             # off-topic / conversational Kyrgyz that lacks ң/ө/ү (e.g. the
-             # "tell me a joke" golden: "Мага тамаша айтып берчи."). Kept to tokens
-             # with no Russian collision ("сага"/"мага" differ — "сага"=RU saga, excluded).
-             "мага", "тамаша", "айтып", "берчи", "айтчы",
-             # address reply that contains only ы as a "Cyrillic" hint
-             # ("Биздин дарегибиз: …") — distinctly Kyrgyz possessives.
-             "биздин", "дарегибиз"}
+_KY_WORDS = {
+    "канча",
+    "канчадан",
+    "баасы",
+    "бармы",
+    "жок",
+    "рахмат",
+    "кечиресиз",
+    "атыңыз",
+    "атым",
+    "брондоо",
+    "бронь",
+    "дарегиңер",
+    "саламатсызбы",
+    "кандай",
+    "качан",
+    "ооба",
+    "макул",
+    "керекпи",
+    "болобу",
+    "саламатчылык",
+    # off-topic / conversational Kyrgyz that lacks ң/ө/ү (e.g. the
+    # "tell me a joke" golden: "Мага тамаша айтып берчи."). Kept to tokens
+    # with no Russian collision ("сага"/"мага" differ — "сага"=RU saga, excluded).
+    "мага",
+    "тамаша",
+    "айтып",
+    "берчи",
+    "айтчы",
+    # address reply that contains only ы as a "Cyrillic" hint
+    # ("Биздин дарегибиз: …") — distinctly Kyrgyz possessives.
+    "биздин",
+    "дарегибиз",
+}
 
 # Below this many Cyrillic letters, an input with no KY/RU-distinctive signal is
 # genuinely undecidable (e.g. "ок", "да"). Returning "unknown" instead of defaulting

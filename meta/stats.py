@@ -1,5 +1,6 @@
 # meta/stats.py
 """Pure agreement statistics for judge validation. No dependencies."""
+
 import math
 
 

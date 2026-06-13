@@ -14,6 +14,7 @@ mean the judge cannot be trusted on Kyrgyz and those metrics need a human in the
 A second mode (--mode live) judges the real bot's output; there human labels are all
 "pass" (we assume the bot is correct), so it reports agreement, not kappa.
 """
+
 import json
 import sys
 from pathlib import Path
@@ -30,12 +31,15 @@ def _summ(rows: list[dict]) -> dict:
     n = len(rows)
     agree = sum(1 for h, j in zip(human, judge) if h == j)
     lo, hi = wilson_interval(agree, n)
-    return {"n": n, "kappa": round(cohens_kappa(human, judge), 3),
-            "agreement": round(agree / n, 3) if n else 0.0,
-            # Wilson 95% CI on agreement: at n≈8 per language the band is wide, so a
-            # RU vs KY gap is directional unless the intervals clearly separate.
-            "agreement_ci": [round(lo, 3), round(hi, 3)],
-            "confusion": {"tp": tp, "tn": tn, "fp": fp, "fn": fn}}
+    return {
+        "n": n,
+        "kappa": round(cohens_kappa(human, judge), 3),
+        "agreement": round(agree / n, 3) if n else 0.0,
+        # Wilson 95% CI on agreement: at n≈8 per language the band is wide, so a
+        # RU vs KY gap is directional unless the intervals clearly separate.
+        "agreement_ci": [round(lo, 3), round(hi, 3)],
+        "confusion": {"tp": tp, "tn": tn, "fp": fp, "fn": fn},
+    }
 
 
 def kappa_by_language(rows: list[dict]) -> dict:
@@ -86,8 +90,9 @@ def _collect_fixture() -> list[dict]:  # pragma: no cover (needs key + network)
     rows = []
     for case in load_validation_set():
         jp = _judge_reply(judge, system_prompt, case["query"], case["reply"])
-        rows.append({"id": case["id"], "lang": case["lang"],
-                     "human": bool(case["human_pass"]), "judge": jp})
+        rows.append(
+            {"id": case["id"], "lang": case["lang"], "human": bool(case["human_pass"]), "judge": jp}
+        )
     return rows
 
 
@@ -105,8 +110,14 @@ def _collect_live() -> list[dict]:  # pragma: no cover (needs keys + network)
     for g in load_goldens():
         out = runner.run(g.messages)
         jp = _judge_reply(judge, system_prompt, g.messages[-1]["content"], out.reply)
-        rows.append({"id": g.id, "lang": g.lang,
-                     "human": bool(g.expected.get("human_pass", True)), "judge": jp})
+        rows.append(
+            {
+                "id": g.id,
+                "lang": g.lang,
+                "human": bool(g.expected.get("human_pass", True)),
+                "judge": jp,
+            }
+        )
     return rows
 
 

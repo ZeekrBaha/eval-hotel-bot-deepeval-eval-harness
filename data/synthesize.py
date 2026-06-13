@@ -237,10 +237,26 @@ PAYMENT_KY = [
 # Multi-turn: user asks to book, assistant asks name, user provides all info.
 
 BOOK_COMPLETE_RU_NAMES = [
-    "Айгуль", "Марат", "Нурия", "Бакыт", "Гульнара",
-    "Асель", "Руслан", "Жамила", "Тимур", "Динара",
-    "Алмаз", "Зарина", "Адилет", "Мира", "Санжар",
-    "Венера", "Эрлан", "Нурзат", "Данияр", "Айнура",
+    "Айгуль",
+    "Марат",
+    "Нурия",
+    "Бакыт",
+    "Гульнара",
+    "Асель",
+    "Руслан",
+    "Жамила",
+    "Тимур",
+    "Динара",
+    "Алмаз",
+    "Зарина",
+    "Адилет",
+    "Мира",
+    "Санжар",
+    "Венера",
+    "Эрлан",
+    "Нурзат",
+    "Данияр",
+    "Айнура",
 ]
 
 BOOK_COMPLETE_RU_STARTS = [
@@ -263,10 +279,26 @@ BOOK_COMPLETE_RU_DETAILS = [
 ]
 
 BOOK_COMPLETE_KY_NAMES = [
-    "Нурлан", "Гулмира", "Бекзат", "Айсана", "Манас",
-    "Арзыгул", "Эркин", "Назгул", "Улан", "Айдай",
-    "Бакыт", "Рахат", "Азиз", "Чынара", "Дамир",
-    "Зульфия", "Кубат", "Айбек", "Нурсулу", "Султан",
+    "Нурлан",
+    "Гулмира",
+    "Бекзат",
+    "Айсана",
+    "Манас",
+    "Арзыгул",
+    "Эркин",
+    "Назгул",
+    "Улан",
+    "Айдай",
+    "Бакыт",
+    "Рахат",
+    "Азиз",
+    "Чынара",
+    "Дамир",
+    "Зульфия",
+    "Кубат",
+    "Айбек",
+    "Нурсулу",
+    "Султан",
 ]
 
 BOOK_COMPLETE_KY_STARTS = [
@@ -386,6 +418,7 @@ LANGUAGE_KY = [
 # Core generator
 # ---------------------------------------------------------------------------
 
+
 def _pick(pool: list, idx: int) -> str:
     """Cycle through pool deterministically by index."""
     return pool[idx % len(pool)]
@@ -471,13 +504,13 @@ def _simple_case(pool: list[str], lang: str, i: int) -> dict:
 # Map kind → (ru_pool, ky_pool, builder_fn or None)
 # builder_fn signature: (lang, i) -> partial dict (messages + expected)
 _KIND_BUILDERS = {
-    "factual":            (FACTUAL_RU,  FACTUAL_KY,  None),
-    "absent_service":     (ABSENT_RU,   ABSENT_KY,   None),
-    "offtopic":           (OFFTOPIC_RU, OFFTOPIC_KY, None),
-    "payment_safety":     (PAYMENT_RU,  PAYMENT_KY,  None),
-    "booking_complete":   (None,        None,        _booking_complete_case),
-    "booking_incomplete": (None,        None,        _booking_incomplete_case),
-    "language":           (LANGUAGE_RU, LANGUAGE_KY, None),
+    "factual": (FACTUAL_RU, FACTUAL_KY, None),
+    "absent_service": (ABSENT_RU, ABSENT_KY, None),
+    "offtopic": (OFFTOPIC_RU, OFFTOPIC_KY, None),
+    "payment_safety": (PAYMENT_RU, PAYMENT_KY, None),
+    "booking_complete": (None, None, _booking_complete_case),
+    "booking_incomplete": (None, None, _booking_incomplete_case),
+    "language": (LANGUAGE_RU, LANGUAGE_KY, None),
 }
 
 
