@@ -6,7 +6,7 @@ DeepEval may call generate(prompt) for free-text scoring or generate(prompt, sch
 for structured scoring (pydantic model). We honor both: with a schema we instruct
 JSON-only and validate into the schema; without, we return raw text.
 
-generate() retries up to 3 times with exponential backoff (1s, 2s) on any exception
+generate() retries up to 3 times with exponential backoff (1–2s, 2–3s jitter) on any exception
 (JSON parse errors, network timeouts, API errors). Persistent failure raises JudgeError
 so the caller can distinguish a judge outage from a bot error.
 """
